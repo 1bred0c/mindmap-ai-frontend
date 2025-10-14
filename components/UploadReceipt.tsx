@@ -18,13 +18,23 @@ export const UploadReceipt = ({ onSuccess, onClose }: { onSuccess?: () => void; 
                 alert('Vui lòng chọn ảnh!')
                 return
             }
-
+            const userId = localStorage.getItem('userId')
+            if (!userId) {
+                alert('Bạn cần đăng nhập trước!')
+                return
+            }
             setIsUploading(true)
 
             // 1️⃣ Insert dòng mới -> Supabase tự tạo paymentid
             const { data: inserted, error: insertError } = await supabase
                 .from('payments')
-                .insert({})
+                .insert({
+                    userid: Number(userId),
+                    subscriptionid: null,          // hoặc số thật nếu có
+                    amount: 99000,                  // hoặc số thật nếu có
+                    status: 'pending',
+                    paidat: new Date().toISOString(),
+                })
                 .select('paymentid')
                 .single()
 

@@ -27,6 +27,7 @@ import {
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabaseClient';
 
 // -----------------------------
 // 🔹 Type definition
@@ -36,6 +37,7 @@ type Workspace = {
   name: string;
   description: string;
   createdAt: string | null;
+  ownerId: number;
 };
 
 // -----------------------------
@@ -67,23 +69,41 @@ export default function WorkspacesPage() {
       try {
         const userData = localStorage.getItem('user');
         const parsedUser = userData ? JSON.parse(userData) : null;
-        const userId = parsedUser?.userId; // chú ý: BE của bạn đang dùng "ownerId" = userid
-        if (!userId) throw new Error('User ID not found in localStorage');
+        const userId = parsedUser?.userId;
 
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:8080/api/v1'}/workspaces/owner/${userId}`,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
-            },
-          }
-        );
+        const base = process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:8080/api/v1';
 
-        if (!res.ok) throw new Error('Failed to fetch user workspaces');
-        const data = await res.json();
-        console.log('✅ Workspaces loaded for user:', userId, data);
-        setWorkspaces(data);
+        // 🔹 1️⃣ Gọi API backend để lấy workspace mà user là owner
+        const res = await fetch(`${base}/workspaces/owner/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          },
+        });
+        const ownerWorkspaces = res.ok ? await res.json() : [];
+
+        // 🔹 2️⃣ Lấy workspace mà user là member trực tiếp từ Supabase
+        const { data: memberWorkspaces, error } = await supabase
+          .from('workspace_members')
+          .select('workspace_id, workspaces(*)') // join với bảng workspaces
+          .eq('userid', userId);
+
+        if (error) throw error;
+
+        // 🔹 3️⃣ Ghép & loại bỏ trùng
+        const combined = [
+          ...ownerWorkspaces,
+          ...(memberWorkspaces?.map((m) => m.workspaces) || []),
+        ].map((w) => ({
+          workspaceId: w.workspace_id ?? w.workspaceId,
+          name: w.name,
+          description: w.description,
+          ownerId: w.owner_id ?? w.ownerId,
+          createdAt: w.created_at ?? w.createdAt,
+        }));
+
+
+
+        setWorkspaces(combined);
       } catch (error) {
         console.error(error);
         toast.error('Cannot load your workspaces');
@@ -94,6 +114,7 @@ export default function WorkspacesPage() {
 
     fetchData();
   }, []);
+
 
 
   // 🔹 Handle delete workspace
@@ -122,6 +143,7 @@ export default function WorkspacesPage() {
       toast.error('Error deleting workspace');
     }
   };
+
 
   // 🔹 Loading state
   if (loading) {
@@ -167,32 +189,39 @@ export default function WorkspacesPage() {
                     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                       <Folder className="h-6 w-6 text-primary" />
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link
-                            href={`/workspaces/${workspace.workspaceId}/edit`}
-                          >
-                            Edit Workspace
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive cursor-pointer"
-                          onClick={() => handleDelete(workspace.workspaceId)}
-                        >
-                          Delete Workspace
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {(() => {
+                      const user = JSON.parse(localStorage.getItem('user') || '{}');
+                      const isOwner = workspace.ownerId === user?.userId;
+                      console.log('isOwner', isOwner);
+                      return (
+                        isOwner && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <Link href={`/workspaces/${workspace.workspaceId}/edit`}>
+                                  Edit Workspace
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive cursor-pointer"
+                                onClick={() => handleDelete(workspace.workspaceId)}
+                              >
+                                Delete Workspace
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )
+                      );
+                    })()}
                   </div>
                   <CardTitle className="text-xl">{workspace.name}</CardTitle>
                   <CardDescription>

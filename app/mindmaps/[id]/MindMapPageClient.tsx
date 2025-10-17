@@ -5,23 +5,38 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
-export default function MindMapPageClient({ mindmap }: { mindmap: any }) {
+type MindMapPageClientProps = {
+    mindmap: any;
+    mindmapId: number; // ✅ thêm prop này
+    viewOnly: boolean;
+};
+
+export default function MindMapPageClient({ mindmap,
+    mindmapId,
+    viewOnly, }: MindMapPageClientProps) {
     const router = useRouter();
 
     const handleSave = (data: any) => {
-        // In a real app, this would save to the backend
-        console.log('Saving mindmap:', mindmap.id, data);
+        console.log('Saving mindmap:', mindmapId, data); // ✅ luôn có ID
     };
 
     return (
         <div className="min-h-screen">
+            {/* 🔙 Nút quay lại */}
             <div className="absolute top-4 left-4 z-10">
                 <Button variant="ghost" size="sm" onClick={() => router.back()}>
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back
                 </Button>
             </div>
-            <MindMapEditor title={mindmap.title} onSave={handleSave} />
+
+            {/* ✅ Truyền ID xuống editor */}
+            <MindMapEditor
+                mindMapId={mindmapId}
+                title={mindmap.title}
+                viewOnly={viewOnly}
+
+            />
         </div>
     );
 }

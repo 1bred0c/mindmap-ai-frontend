@@ -5,85 +5,147 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+    Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-    Brain,
-    MoreHorizontal,
-    Plus,
-    Users,
-    ArrowLeft,
-    Calendar,
+    Brain, MoreHorizontal, Plus, Users, ArrowLeft, Calendar,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabaseClient';
 
-// -----------------------------
-// 🔹 Type definitions
-// -----------------------------
 type Workspace = {
     workspaceId: number;
     name: string;
     description: string;
     createdat: string;
+    ownerId: number;
 };
 
 type Mindmap = {
-    id: string;
+    mindMapId: number;
     title: string;
+    description: string;
+    workspaceId: number;
+    ownerId: number;
     createdAt: string;
     updatedAt: string;
+    public: boolean;
 };
 
-// -----------------------------
-// 🔹 Environment-based API endpoint
-// -----------------------------
 const API_ENDPOINT =
     process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:8080/api/v1';
 
-export default function WorkspaceDetailClient({
-    workspace,
-    mindmaps,
-}: {
-    workspace: Workspace | null;
-    mindmaps: Mindmap[];
-}) {
-    const [data, setData] = useState<Workspace | null>(workspace);
 
+export default function WorkspaceDetailClient({ workspace }: { workspace: Workspace | null }) {
+    const [data, setData] = useState<Workspace | null>(workspace);
+    const [mindmaps, setMindmaps] = useState<Mindmap[]>([]);
+    const [userId, setUserId] = useState<number | null>(null);
+    const [isOwner, setIsOwner] = useState(false);
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const userData = localStorage.getItem('user');
+                if (userData) {
+                    const parsedUser = JSON.parse(userData);
+                    setUserId(parsedUser?.userId ?? null);
+                    setIsOwner(parsedUser?.userId === workspace?.ownerId);
+                }
+            } catch (err) {
+                console.warn('⚠️ Invalid user data', err);
+            }
+        }
+    }, [workspace]);
     useEffect(() => {
         setData(workspace);
     }, [workspace]);
 
-    // -----------------------------
-    // 🔹 Handle delete
-    // -----------------------------
+    // 🔹 Lấy danh sách mindmaps theo workspaceId
+    useEffect(() => {
+
+        const fetchMindmaps = async () => {
+            if (!workspace?.workspaceId) return;
+            try {
+                const res = await fetch(`${API_ENDPOINT}/mindmap/workspace/${workspace.workspaceId}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+                    },
+                });
+
+                if (!res.ok) throw new Error('Failed to fetch mindmaps');
+                const data = await res.json();
+                const filtered = isOwner ? data : data.filter((m: Mindmap) => m.public);
+                setMindmaps(filtered);
+            } catch (error) {
+                console.error(error);
+                toast.error('Cannot load mind maps');
+            }
+        };
+
+        fetchMindmaps();
+    }, [workspace?.workspaceId]);
+
+
+    // 🔹 Xoá mindmap
+    const handleDeleteMindmap = async (mindMapId: number) => {
+        if (!confirm('Are you sure you want to delete this mind map?')) return;
+
+        try {
+            const res = await fetch(`${API_ENDPOINT}/mindmap/${mindMapId}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+                },
+            });
+
+            if (!res.ok) throw new Error('Failed to delete mind map');
+
+            toast.success('🗑️ Mind map deleted successfully!');
+            setMindmaps((prev) => prev.filter((m) => m.mindMapId !== mindMapId));
+        } catch (error) {
+            console.error(error);
+            toast.error('Error deleting mind map');
+        }
+    };
+
+
+
+    const handleSetPublic = async (mindMapId: number, value: boolean) => {
+        try {
+            const { data, error } = await supabase
+                .from('mindmaps')
+                .update({ is_public: value })         // ⬅️ nếu cột bạn là is_public, đổi thành { is_public: value }
+                .eq('mind_map_id', mindMapId)       // ⬅️ nếu khóa là mind_map_id thì đổi cho khớp
+                .select('mind_map_id, is_public')      // trả về để đồng bộ UI
+                .single();
+
+            if (error) throw error;
+
+            toast.success(`Mind map is now ${value ? 'Public' : 'Private'}`);
+
+            setMindmaps(prev =>
+                prev.map(m => (m.mindMapId === mindMapId ? { ...m, public: value } : m))
+            );
+        } catch (err) {
+            console.error(err);
+            toast.error('Error updating visibility');
+        }
+    };
+
+
     const handleDelete = async () => {
         if (!confirm('Are you sure you want to delete this workspace?')) return;
 
-        const userData = localStorage.getItem('user');
-        const parsedUser = userData ? JSON.parse(userData) : null;
-        const userId = parsedUser?.userid ?? 1; // backend key là userid, ko phải userId
 
         try {
-            const res = await fetch(
-                `${API_ENDPOINT}/workspaces/${data?.workspaceId}?userId=${userId}`,
-                {
-                    method: 'DELETE',
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
-                    },
-                }
-            );
+            const res = await fetch(`${API_ENDPOINT}/workspaces/${data?.workspaceId}?userId=${userId}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+            });
 
             if (!res.ok) throw new Error('Failed to delete workspace');
             toast.success('Workspace deleted successfully!');
@@ -94,9 +156,6 @@ export default function WorkspaceDetailClient({
         }
     };
 
-    // -----------------------------
-    // 🔹 UI render
-    // -----------------------------
     if (!data) {
         return (
             <div className="p-6 text-center">
@@ -118,9 +177,13 @@ export default function WorkspaceDetailClient({
                         Back
                     </Link>
                 </Button>
-                <Button variant="destructive" size="sm" onClick={handleDelete}>
-                    Delete Workspace
-                </Button>
+
+                {isOwner && (
+                    <Button variant="destructive" size="sm" onClick={handleDelete}>
+                        Delete Workspace
+                    </Button>
+                )}
+
             </div>
 
             {/* Workspace Info */}
@@ -137,21 +200,22 @@ export default function WorkspaceDetailClient({
                             <span className="text-sm text-muted-foreground">
                                 Created{' '}
                                 {data.createdat
-                                    ? formatDistanceToNow(new Date(data.createdat), {
-                                        addSuffix: true,
-                                    })
+                                    ? formatDistanceToNow(new Date(data.createdat), { addSuffix: true })
                                     : 'unknown'}
                             </span>
                         </div>
                     </div>
                 </div>
                 <div className="flex items-center space-x-2 mt-4 sm:mt-0">
-                    <Button variant="outline" size="sm" asChild>
-                        <Link href={`/workspaces/${data.workspaceId}/share`}>
-                            <Users className="h-4 w-4 mr-2" />
-                            Share
-                        </Link>
-                    </Button>
+
+                    {isOwner && (
+                        <Button variant="outline" size="sm" asChild>
+                            <Link href={`/workspaces/${data.workspaceId}/share`}>
+                                <Users className="h-4 w-4 mr-2" />
+                                Share
+                            </Link>
+                        </Button>
+                    )}
                     <Button asChild>
                         <Link href={`/mindmaps/new?workspace=${data.workspaceId}`}>
                             <Plus className="h-4 w-4 mr-2" />
@@ -165,44 +229,54 @@ export default function WorkspaceDetailClient({
             {mindmaps.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {mindmaps.map((mindmap) => (
-                        <Card
-                            key={mindmap.id}
-                            className="hover:shadow-md transition-shadow group"
-                        >
+                        <Card key={mindmap.mindMapId} className="hover:shadow-md transition-shadow group">
                             <CardHeader>
                                 <div className="flex items-start justify-between">
                                     <div className="w-12 h-12 rounded-lg bg-secondary/20 flex items-center justify-center">
                                         <Brain className="h-6 w-6 text-secondary-foreground" />
                                     </div>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem asChild>
-                                                <Link href={`/mindmaps/${mindmap.id}/edit`}>
-                                                    Edit Mind Map
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                                            <DropdownMenuItem className="text-destructive">
-                                                Delete Mind Map
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                    {isOwner && (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+
+                                            <DropdownMenuContent align="end">
+                                                {mindmap.public ? (
+                                                    <DropdownMenuItem onClick={() => handleSetPublic(mindmap.mindMapId, false)}>
+                                                        Make Private
+                                                    </DropdownMenuItem>
+                                                ) : (
+                                                    <DropdownMenuItem onClick={() => handleSetPublic(mindmap.mindMapId, true)}>
+                                                        Make Public
+                                                    </DropdownMenuItem>
+                                                )}
+
+                                                <DropdownMenuItem
+                                                    className="text-destructive cursor-pointer"
+                                                    onClick={() => handleDeleteMindmap(mindmap.mindMapId)}
+                                                >
+                                                    Delete Mind Map
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+
+
+                                        </DropdownMenu>
+
+                                    )}
+
+
                                 </div>
                                 <CardTitle className="text-lg">{mindmap.title}</CardTitle>
                                 <CardDescription>
                                     Last modified{' '}
-                                    {formatDistanceToNow(new Date(mindmap.updatedAt), {
-                                        addSuffix: true,
-                                    })}
+                                    {formatDistanceToNow(new Date(mindmap.updatedAt), { addSuffix: true })}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -211,14 +285,21 @@ export default function WorkspaceDetailClient({
                                         <Calendar className="h-4 w-4" />
                                         <span>
                                             Created{' '}
-                                            {formatDistanceToNow(new Date(mindmap.createdAt), {
-                                                addSuffix: true,
-                                            })}
+                                            {formatDistanceToNow(new Date(mindmap.createdAt), { addSuffix: true })}
                                         </span>
                                     </div>
+                                    <Badge variant={mindmap.public ? 'default' : 'secondary'}>
+                                        {mindmap.public ? 'Public' : 'Private'}
+                                    </Badge>
                                     <Button className="w-full" asChild>
-                                        <Link href={`/mindmaps/${mindmap.id}`}>Open Mind Map</Link>
+                                        <Link
+                                            href={`/mindmaps/${mindmap.mindMapId}?userId=${userId}`}
+                                        >
+                                            Open Mind Map
+                                        </Link>
                                     </Button>
+
+
                                 </div>
                             </CardContent>
                         </Card>

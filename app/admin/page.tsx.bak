@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabaseClient'
@@ -53,7 +53,8 @@ export default function AdminPage() {
   const [imgUrls, setImgUrls] = useState<Record<number, string>>({})
   const [filter, setFilter] = useState<'all' | 'pending' | 'verified' | 'rejected'>('pending')
 
-  const fetchUsers = useCallback(async () => {
+  // � Lấy payments theo trạng thái (hoặc toàn bộ)
+  const fetchPayments = useCallback(async (status?: string) => {
     const { data, error } = await supabase
       .from('users')
       .select(`
@@ -85,24 +86,10 @@ export default function AdminPage() {
     })
 
     setUsers(mapped)
-  }, [])
-
-  const buildSignedUrls = async (rows: Payment[]) => {
-    const map: Record<number, string> = {}
-    await Promise.all(
-      rows.map(async (p) => {
-        if (p.payment_image_url) {
-          const { data, error } = await supabase.storage
-            .from('payment_images')
-            .createSignedUrl(p.payment_image_url, 3600)
-          if (!error && data?.signedUrl) map[p.paymentid] = data.signedUrl
-        }
-      })
-    )
-    setImgUrls(map)
   }
 
-  const fetchPayments = useCallback(async (status?: string) => {
+  // 💳 Lấy payments theo trạng thái (hoặc toàn bộ)
+  const fetchPayments = async (status?: string) => {
     let query = supabase
       .from('payments')
       .select(`
@@ -130,6 +117,7 @@ export default function AdminPage() {
       return
     }
 
+    // Transform data to match Payment type
     const transformedData: Payment[] = (data || []).map((item: any) => ({
       paymentid: item.paymentid,
       subscriptionid: item.subscriptionid,
@@ -143,27 +131,40 @@ export default function AdminPage() {
 
     setPayments(transformedData)
     buildSignedUrls(transformedData)
-  }, [])
+  }
 
-  const fetchSubscriptions = useCallback(async () => {
+  // 🖼️ Tạo signed URL để admin xem ảnh hóa đơn
+  const buildSignedUrls = async (rows: Payment[]) => {
+    const map: Record<number, string> = {}
+    await Promise.all(
+      rows.map(async (p) => {
+        if (p.payment_image_url) {
+          const { data, error } = await supabase.storage
+            .from('payment_images')
+            .createSignedUrl(p.payment_image_url, 3600)
+          if (!error && data?.signedUrl) map[p.paymentid] = data.signedUrl
+        }
+      })
+    )
+    setImgUrls(map)
+  }
+
+  // 🔁 Lấy danh sách subscriptions
+  const fetchSubscriptions = async () => {
     const { data, error } = await supabase.from('subscriptions').select('*')
     if (error) console.error('Fetch subscriptions error:', error)
     setSubscriptions(data || [])
-  }, [])
+  }
 
-  useEffect(() => {
-    fetchUsers()
-    fetchPayments(filter)
-    fetchSubscriptions()
-  }, [filter, fetchUsers, fetchPayments, fetchSubscriptions])
-
+  // ✅ Khi admin Approve hoặc Reject
   const updatePaymentStatus = async (
     paymentId: number,
     status: 'verified' | 'rejected'
   ) => {
     try {
-      console.log('Approving payment:', paymentId)
+      console.log('⏳ Approving payment:', paymentId)
 
+      // 1️⃣ Lấy userId từ bảng payments
       const { data: payment, error: paymentFetchErr } = await supabase
         .from('payments')
         .select('userid')
@@ -171,14 +172,15 @@ export default function AdminPage() {
         .single()
 
       if (paymentFetchErr || !payment) {
-        console.error('Error fetching payment:', paymentFetchErr)
+        console.error('❌ Không lấy được userId từ payment:', paymentFetchErr)
         alert('Không tìm thấy thông tin người thanh toán!')
         return
       }
 
       const userId = payment.userid
-      console.log('Got userId:', userId)
+      console.log('✅ Lấy được userId:', userId)
 
+      // 2️⃣ Cập nhật trạng thái payment
       const { error: payErr } = await supabase
         .from('payments')
         .update({ status })
@@ -186,6 +188,7 @@ export default function AdminPage() {
 
       if (payErr) throw payErr
 
+      // 3️⃣ Nếu admin duyệt -> tạo subscription 30 ngày
       if (status === 'verified' && userId) {
         const now = new Date()
         const endDate = new Date()
@@ -213,23 +216,29 @@ export default function AdminPage() {
           .update({ role: 'premium' })
           .eq('userid', userId)
 
-        alert('Duyệt thành công và tạo gói 30 ngày cho user!')
+        alert('✅ Duyệt thành công và tạo gói 30 ngày cho user!')
       } else if (status === 'rejected') {
-        alert('Giao dịch bị từ chối.')
+        alert('🚫 Giao dịch bị từ chối.')
       }
 
       fetchPayments(filter)
       fetchUsers()
       fetchSubscriptions()
     } catch (err) {
-      console.error('Error approving:', err)
+      console.error('🔥 Lỗi khi duyệt:', err)
       alert('Đã xảy ra lỗi khi duyệt thanh toán.')
     }
   }
 
+  const fmtMoney = (n: number | null) =>
+    typeof n === 'number' ? n.toLocaleString() + ' VND' : '-'
+
   return (
     <div className="p-6 space-y-10">
+
+      {/* 🔹 Dashboard Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+        {/* Total Users */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -241,6 +250,7 @@ export default function AdminPage() {
           </CardContent>
         </Card>
 
+        {/* Total Subscriptions */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Subscriptions</CardTitle>
@@ -252,6 +262,7 @@ export default function AdminPage() {
           </CardContent>
         </Card>
 
+        {/* Active Subscriptions */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
@@ -269,6 +280,7 @@ export default function AdminPage() {
           </CardContent>
         </Card>
 
+        {/* Pending Payments */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Pending Payments</CardTitle>
@@ -281,8 +293,10 @@ export default function AdminPage() {
             <p className="text-xs text-muted-foreground">Chờ admin xác nhận</p>
           </CardContent>
         </Card>
-      </div>
 
+
+      </div>
+      {/* 👥 QUẢN LÝ NGƯỜI DÙNG */}
       <Card>
         <CardHeader>
           <CardTitle>Users Management</CardTitle>
@@ -309,6 +323,7 @@ export default function AdminPage() {
                     <span className="font-medium">{u.fullname || 'No Name'}</span>
                   </TableCell>
                   <TableCell>{u.email}</TableCell>
+
                   <TableCell>
                     <Badge variant={u.role === 'admin' ? 'default' : 'outline'}>
                       {u.role || 'user'}
@@ -331,12 +346,14 @@ export default function AdminPage() {
         </CardContent>
       </Card>
 
+      {/* 💳 QUẢN LÝ THANH TOÁN */}
       <Card>
         <CardHeader>
           <CardTitle>Payment Management</CardTitle>
           <CardDescription>Lọc và xử lý giao dịch thanh toán</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Bộ lọc trạng thái */}
           <div className="flex gap-2 mb-4">
             <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => setFilter('all')}>All</Button>
             <Button variant={filter === 'pending' ? 'default' : 'outline'} onClick={() => setFilter('pending')}>Pending</Button>
@@ -409,24 +426,29 @@ export default function AdminPage() {
                         </Button>
                       </>
                     ) : p.status === 'verified' ? (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => updatePaymentStatus(p.paymentid, 'rejected')}
-                      >
-                        <X className="h-4 w-4 mr-1" /> Delete
-                      </Button>
+                      <>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => updatePaymentStatus(p.paymentid, 'rejected')}
+                        >
+                          <X className="h-4 w-4 mr-1" /> Delete
+                        </Button>
+                      </>
                     ) : p.status === 'rejected' ? (
-                      <Button
-                        size="sm"
-                        onClick={() => updatePaymentStatus(p.paymentid, 'verified')}
-                      >
-                        <Check className="h-4 w-4 mr-1" /> Active
-                      </Button>
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={() => updatePaymentStatus(p.paymentid, 'verified')}
+                        >
+                          <Check className="h-4 w-4 mr-1" /> Active
+                        </Button>
+                      </>
                     ) : (
                       <span className="text-sm text-muted-foreground">No actions</span>
                     )}
                   </TableCell>
+
                 </TableRow>
               ))}
               {payments.length === 0 && (

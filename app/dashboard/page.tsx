@@ -89,7 +89,7 @@ export default function DashboardPage() {
           ...(ownedWs?.map((w) => w.workspace_id) || []),
           ...(joinedWs?.map((j) => j.workspaceid) || []),
         ]
-        const uniqueIds = [...new Set(allWorkspaceIds)]
+        const uniqueIds = Array.from(new Set(allWorkspaceIds))
 
         const { data: allWorkspaces, error: wsErr3 } = await supabase
           .from('workspaces')

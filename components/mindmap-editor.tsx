@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -13,239 +13,568 @@ import {
   Edge,
   Node,
   BackgroundVariant,
+  Handle,
+  Position,
 } from '@xyflow/react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Palette, Save, Download, Undo, Redo } from 'lucide-react';
+import { Plus, Save, Download, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/lib/supabaseClient';
 import '@xyflow/react/dist/style.css';
 
-const initialNodes: Node[] = [
-  {
-    id: '1',
-    type: 'default',
-    position: { x: 250, y: 250 },
-    data: { label: 'Main Idea' },
-    style: { backgroundColor: '#3b82f6', color: 'white', borderRadius: '8px' },
-  },
-  {
-    id: '2',
-    type: 'default',
-    position: { x: 100, y: 100 },
-    data: { label: 'Subtopic 1' },
-    style: { backgroundColor: '#10b981', color: 'white', borderRadius: '8px' },
-  },
-  {
-    id: '3',
-    type: 'default',
-    position: { x: 400, y: 100 },
-    data: { label: 'Subtopic 2' },
-    style: { backgroundColor: '#f59e0b', color: 'white', borderRadius: '8px' },
-  },
-];
-
-const initialEdges: Edge[] = [
-  { id: 'e1-2', source: '1', target: '2' },
-  { id: 'e1-3', source: '1', target: '3' },
-];
-
 const nodeColors = [
-  '#3b82f6', // Blue
-  '#10b981', // Green
-  '#f59e0b', // Orange
-  '#ef4444', // Red
-  '#8b5cf6', // Purple
-  '#06b6d4', // Cyan
-  '#84cc16', // Lime
-  '#f97316', // Orange
+  '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316',
 ];
 
 interface MindMapEditorProps {
   title?: string;
-  onSave?: (data: any) => void;
-  nodes?: Node[];
-  edges?: Edge[];
+  mindMapId: number;
+  viewOnly?: boolean;
 }
-
 
 export function MindMapEditor({
   title = 'Untitled Mind Map',
-  onSave,
-  nodes: initialNodesProp,
-  edges: initialEdgesProp,
-}: MindMapEditorProps) {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodesProp ?? initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdgesProp ?? initialEdges);
+  mindMapId,
+  viewOnly = false,   // 👈 thêm default
+}: MindMapEditorProps & { viewOnly?: boolean }) {
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [nodeText, setNodeText] = useState('');
   const [nodeColor, setNodeColor] = useState('#3b82f6');
-  const [nextNodeId, setNextNodeId] = useState(4);
+  const [loading, setLoading] = useState(true);
+  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 
+  const [editingEdgeId, setEditingEdgeId] = useState<string | null>(null);
+  const [editingLabel, setEditingLabel] = useState('');
+  const [labelPosition, setLabelPosition] = useState<{ x: number; y: number } | null>(null);
+
+  const onEdgeDoubleClick = useCallback(
+    (event: React.MouseEvent, edge: Edge) => {
+      event.preventDefault();
+
+      // ✅ Lấy vị trí click
+      const clickX = event.clientX;
+      const clickY = event.clientY;
+
+      // ✅ Hiển thị input cao hơn một chút (ví dụ 20px)
+      setLabelPosition({ x: clickX, y: clickY - 20 });
+      setEditingEdgeId(edge.id);
+      setEditingLabel(String(edge.label || ''));
+    },
+    []
+  );
+
+
+
+
+  const saveEdgeLabel = useCallback(async () => {
+    if (!editingEdgeId) return;
+
+    const { error } = await supabase
+      .from('edges')
+      .update({ label: editingLabel })
+      .eq('edge_id', editingEdgeId);
+
+    if (error) {
+      toast.error('Failed to update edge label');
+      return;
+    }
+
+    setEdges((eds) =>
+      eds.map((e) =>
+        e.id === editingEdgeId ? { ...e, label: editingLabel } : e
+      )
+    );
+
+    setEditingEdgeId(null);
+    toast.success('✅ Edge label updated');
+  }, [editingEdgeId, editingLabel, setEdges]);
+
+
+  const onEdgeClick = useCallback((_, edge: Edge) => {
+    setSelectedEdge(edge);
+    toast.message(`Selected edge: ${edge.id}`);
+  }, []);
+  const handleDeleteEdge = useCallback(async () => {
+    if (!selectedEdge) {
+      toast.error('No edge selected');
+      return;
+    }
+
+    // ⚡ Xóa local để phản hồi nhanh
+    setEdges((eds) => eds.filter((e) => e.id !== selectedEdge.id));
+
+    // 🔄 Xóa trong DB → realtime sync cho người khác
+    const { error } = await supabase.from('edges').delete().eq('edge_id', selectedEdge.id);
+    if (error) {
+      toast.error('Error deleting edge');
+      return;
+    }
+
+    toast.success('🗑️ Edge deleted');
+    setSelectedEdge(null);
+  }, [selectedEdge, setEdges]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete') handleDeleteEdge();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleDeleteEdge]);
+
+
+  // 🔹 Load nodes & edges from Supabase
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const { data: nodeData, error: nodeErr } = await supabase
+          .from('nodes')
+          .select('*')
+          .eq('mind_map_id', mindMapId);
+
+        const { data: edgeData, error: edgeErr } = await supabase
+          .from('edges')
+          .select('*')
+          .eq('mind_map_id', mindMapId);
+
+        if (nodeErr || edgeErr) throw nodeErr || edgeErr;
+
+        setNodes(
+          nodeData.map((n) => ({
+            id: String(n.node_id),
+            data: { label: n.content },
+            position: { x: n.position_x, y: n.position_y },
+            style: {
+              background: n.color || '#3b82f6',
+              color: 'white',
+              borderRadius: '8px',
+              padding: '6px 10px',
+              fontSize: 14,
+              fontWeight: 500,
+              boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+            },
+          }))
+        );
+
+        setEdges(
+          edgeData.map((e) => ({
+            id: String(e.edge_id),
+            source: String(e.from_node_id),
+            target: String(e.to_node_id),
+            label: e.label || '',
+          }))
+        );
+      } catch (error) {
+        console.error(error);
+        toast.error('Failed to load mindmap');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    const nodeChannel = supabase
+      .channel('nodes-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'nodes', filter: `mind_map_id=eq.${mindMapId}` },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const n = payload.new;
+            setNodes((prev) => [
+              ...prev,
+              {
+                id: String(n.node_id),
+                data: { label: n.content },
+                position: { x: n.position_x, y: n.position_y },
+                style: {
+                  background: n.color || '#3b82f6',
+                  color: 'white',
+                  borderRadius: '8px',
+                  padding: '6px 10px',
+                  fontWeight: 500,
+                },
+              },
+            ]);
+          }
+
+          if (payload.eventType === 'UPDATE') {
+            const n = payload.new;
+            setNodes((prev) =>
+              prev.map((node) =>
+                node.id === String(n.node_id)
+                  ? { ...node, data: { label: n.content }, position: { x: n.position_x, y: n.position_y } }
+                  : node
+              )
+            );
+          }
+
+          if (payload.eventType === 'DELETE') {
+            const n = payload.old;
+            setNodes((prev) => prev.filter((node) => node.id !== String(n.node_id)));
+          }
+        }
+      )
+      .subscribe();
+
+    const edgeChannel = supabase
+      .channel('edges-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'edges', filter: `mind_map_id=eq.${mindMapId}` },
+        (payload) => {
+          console.log('🔄 Edge Realtime Event:', payload);
+
+          if (payload.eventType === 'INSERT') {
+            const e = payload.new;
+            setEdges((prev) => [
+              ...prev,
+              {
+                id: String(e.edge_id),
+                source: String(e.from_node_id),
+                target: String(e.to_node_id),
+                label: e.label || '',
+              },
+            ]);
+          }
+
+          if (payload.eventType === 'UPDATE') {
+            const e = payload.new;
+            setEdges((prev) =>
+              prev.map((edge) =>
+                edge.id === String(e.edge_id)
+                  ? { ...edge, label: e.label || '' }
+                  : edge
+              )
+            );
+          }
+
+          if (payload.eventType === 'DELETE') {
+            const e = payload.old;
+            setEdges((prev) => prev.filter((edge) => edge.id !== String(e.edge_id)));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(nodeChannel);
+      supabase.removeChannel(edgeChannel);
+    };
+
+
+  }, [mindMapId]);
+
+  // 🔹 Add new node
+  const addNewNode = useCallback(async () => {
+    const newNode = {
+      mind_map_id: mindMapId,
+      content: 'New Node',
+      position_x: Math.random() * 500 + 100,
+      position_y: Math.random() * 300 + 100,
+      color: '#3b82f6',
+      shape: 'RECTANGLE',
+    };
+
+    const { data, error } = await supabase.from('nodes').insert(newNode).select().single();
+    if (error) {
+      console.error(error);
+      toast.error('Error creating node');
+      return;
+    }
+
+    setNodes((nds) => [
+      ...nds,
+      {
+        id: String(data.node_id),
+        data: { label: data.content },
+        position: { x: data.position_x, y: data.position_y },
+        style: {
+          background: data.color || '#3b82f6',
+          color: 'white',
+          borderRadius: '8px',
+          padding: '6px 10px',
+          fontSize: 14,
+          fontWeight: 500,
+          boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+        },
+      },
+    ]);
+
+    toast.success('✅ Node added');
+  }, [mindMapId, setNodes]);
+
+  // 🔹 Update node (label, color)
+  const updateNode = useCallback(async () => {
+    if (!selectedNode) return;
+
+    const updatedData = {
+      content: nodeText,
+      color: nodeColor,
+      position_x: selectedNode.position.x,
+      position_y: selectedNode.position.y,
+    };
+
+    // Cập nhật local trước
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === selectedNode.id
+          ? {
+            ...n,
+            data: { label: nodeText },
+            style: { ...n.style, background: nodeColor },
+          }
+          : n
+      )
+    );
+
+    // Gửi update
+    const { error } = await supabase
+      .from('nodes')
+      .update(updatedData)
+      .eq('node_id', selectedNode.id);
+
+    if (error) {
+      toast.error('❌ Failed to update node');
+      console.error(error);
+      return;
+    }
+
+    toast.success('💾 Node updated');
+    setIsEditDialogOpen(false);
+  }, [selectedNode, nodeText, nodeColor, setNodes]);
+
+
+
+
+  // 🔹 Delete node
+  const deleteNode = useCallback(async () => {
+    if (!selectedNode) return;
+
+    // ⚡ Xóa tạm local ngay lập tức
+    setNodes((nds) => nds.filter((n) => n.id !== selectedNode.id));
+    setEdges((eds) =>
+      eds.filter(
+        (e) => e.source !== selectedNode.id && e.target !== selectedNode.id
+      )
+    );
+
+    // 🔄 Gửi request xóa đến Supabase
+    const { error } = await supabase
+      .from('nodes')
+      .delete()
+      .eq('node_id', selectedNode.id);
+
+    if (error) {
+      toast.error('Error deleting node');
+      return;
+    }
+
+    toast.success('🗑️ Node deleted');
+    setIsEditDialogOpen(false);
+  }, [selectedNode, setNodes, setEdges]);
+
+
+
+  // 🔹 Connect nodes = create edge
   const onConnect = useCallback(
-    (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
+    async (params: Connection | Edge) => {
+      const newEdge = {
+        mind_map_id: mindMapId,
+        from_node_id: parseInt(params.source!),
+        to_node_id: parseInt(params.target!),
+        label: '',
+      };
+      const { data, error } = await supabase.from('edges').insert(newEdge).select().single();
+      if (error) {
+        console.error(error);
+        toast.error('Error creating edge');
+        return;
+      }
+
+      setEdges((eds) => [
+        ...eds,
+        {
+          id: String(data.edge_id),
+          source: String(data.from_node_id),
+          target: String(data.to_node_id),
+          label: data.label || '',
+        },
+      ]);
+      toast.success('🔗 Edge created');
+    },
+    [mindMapId, setEdges]
+  );
+
+  // 🔹 Delete edge (right-click)
+  const onEdgeContextMenu = useCallback(
+    async (event: React.MouseEvent, edge: Edge) => {
+      event.preventDefault();
+      const { error } = await supabase.from('edges').delete().eq('edge_id', edge.id);
+      if (error) {
+        toast.error('Error deleting edge');
+        return;
+      }
+      setEdges((eds) => eds.filter((e) => e.id !== edge.id));
+      toast.success('🗑️ Edge deleted');
+    },
     [setEdges]
   );
 
-  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+  // 🔹 Save node positions
+  const handleSave = useCallback(async () => {
+    const token = localStorage.getItem('token');
+
+    try {
+      // Cập nhật tất cả nodes trong Supabase
+      const updates = nodes.map((n) =>
+        supabase
+          .from('nodes')
+          .update({
+            position_x: n.position.x,
+            position_y: n.position.y,
+          })
+          .eq('node_id', Number(n.id))
+      );
+
+      await Promise.all(updates);
+      toast.success('💾 Mindmap saved successfully!');
+    } catch (err) {
+      console.error(err);
+      toast.error('❌ Failed to save positions');
+    }
+  }, [nodes]);
+
+
+  // 🔹 Click to edit node
+  const onNodeClick = useCallback((_: any, node: Node) => {
     setSelectedNode(node);
-    setNodeText('hello');
-    setNodeColor(node.style?.backgroundColor || '#3b82f6');
+    setNodeText(String((node.data as { label?: string }).label ?? ''));
+    setNodeColor(String((node.style?.background ?? '#3b82f6')));
+
     setIsEditDialogOpen(true);
   }, []);
 
-  const addNewNode = useCallback(() => {
-    const newNode: Node = {
-      id: nextNodeId.toString(),
-      type: 'default',
-      position: { x: Math.random() * 600 + 100, y: Math.random() * 400 + 100 }, // tăng khoảng random
-      data: { label: 'New Node' },
-      style: { backgroundColor: '#3b82f6', color: 'white', borderRadius: '8px' },
-    };
-    console.log('Add node', newNode);
-    setNodes((nds) => [...nds, newNode]);
-    setNextNodeId(id => id + 1);
-  }, [nextNodeId, setNodes]);
-
-  const updateNode = useCallback(() => {
-    if (!selectedNode) return;
-
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === selectedNode.id
-          ? {
-            ...node,
-            data: { ...node.data, label: nodeText },
-            style: { ...node.style, backgroundColor: nodeColor },
-          }
-          : node
-      )
-    );
-    setIsEditDialogOpen(false);
-    setSelectedNode(null);
-  }, [selectedNode, nodeText, nodeColor, setNodes]);
-
-  const deleteNode = useCallback(() => {
-    if (!selectedNode) return;
-
-    setNodes((nds) => nds.filter((node) => node.id !== selectedNode.id));
-    setEdges((eds) => eds.filter((edge) =>
-      edge.source !== selectedNode.id && edge.target !== selectedNode.id
-    ));
-    setIsEditDialogOpen(false);
-    setSelectedNode(null);
-  }, [selectedNode, setNodes, setEdges]);
-
-  const handleSave = useCallback(() => {
-    const data = { nodes, edges };
-    onSave?.(data);
-    // In a real app, this would save to the backend
-    console.log('Saving mind map:', data);
-  }, [nodes, edges, onSave]);
-
-  const handleExport = useCallback(() => {
-    const data = { title, nodes, edges };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${title.toLowerCase().replace(/\s+/g, '-')}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }, [title, nodes, edges]);
+  if (loading) return <div className="p-6 text-center">Loading mindmap...</div>;
 
   return (
     <div className="h-full flex flex-col">
       {/* Toolbar */}
-      <div className="border-b bg-background p-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold">{title}</h1>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={addNewNode}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Node
-            </Button>
-            <Button variant="outline" size="sm">
-              <Undo className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm">
-              <Redo className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleSave}>
-              <Save className="h-4 w-4 mr-2" />
-              Save
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-          </div>
+      <div className="border-b bg-background p-4 flex items-center justify-center relative">
+        <h1 className="text-xl font-semibold text-center">{title}</h1>
+        <div className="absolute right-4 flex items-center gap-2">
+          {!viewOnly && (
+            <>
+              <Button variant="outline" size="sm" onClick={addNewNode}>
+                <Plus className="h-4 w-4 mr-2" /> Add Node
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleSave}>
+                <Save className="h-4 w-4 mr-2" /> Save
+              </Button>
+            </>
+          )}
+
         </div>
       </div>
 
-      {/* Mind Map Canvas */}
-      <div style={{ width: '100%', height: '600px' }}>
+
+      {/* Canvas */}
+      <div style={{ width: '100%', height: 'calc(100vh - 64px)' }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onNodeClick={onNodeClick}
+          onConnect={!viewOnly ? onConnect : undefined}
+          onEdgeClick={!viewOnly ? onEdgeClick : undefined}
+          onNodesChange={!viewOnly ? onNodesChange : undefined}
+          onEdgesChange={!viewOnly ? onEdgesChange : undefined}
+          onNodeClick={!viewOnly ? onNodeClick : undefined}
+          onNodeDragStop={!viewOnly ? async (_, node) => {
+            // Cập nhật vị trí trong local state
+            setNodes((prev) =>
+              prev.map((n) => (n.id === node.id ? { ...n, position: node.position } : n))
+            );
+
+            // Gửi vị trí mới lên Supabase
+            await supabase
+              .from('nodes')
+              .update({
+                position_x: node.position.x,
+                position_y: node.position.y,
+              })
+              .eq('node_id', node.id);
+          } : undefined}
           fitView
-          attributionPosition="bottom-left"
+          proOptions={{ hideAttribution: true }}
+          onEdgeDoubleClick={!viewOnly ? onEdgeDoubleClick : undefined}
         >
-          <Controls />
-          <MiniMap />
+          {editingEdgeId && labelPosition && (
+            <input
+              className="absolute z-50 border border-gray-300 rounded px-2 py-1 text-sm bg-white shadow"
+              style={{
+                top: labelPosition.y,
+                left: labelPosition.x,
+                transform: 'translate(-50%, -50%)',
+              }}
+              value={editingLabel}
+              onChange={(e) => setEditingLabel(e.target.value)}
+              onBlur={saveEdgeLabel}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveEdgeLabel();
+                if (e.key === 'Escape') setEditingEdgeId(null);
+              }}
+              autoFocus
+            />
+          )}
+
+
+          <MiniMap
+            style={{
+              position: 'absolute',
+              bottom: 20,
+              right: 20,
+              width: 160,
+              height: 120,
+              borderRadius: 8,
+              border: '1px solid #ccc',
+              background: '#f8f9fa',
+            }}
+          />
+          <Controls position="bottom-left" />
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         </ReactFlow>
       </div>
 
-      {/* Edit Node Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Node</DialogTitle>
-            <DialogDescription>
-              Update the text and appearance of this node.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="node-text" className="text-right">
-                Text
-              </Label>
-              <Input
-                id="node-text"
-                value={nodeText}
-                onChange={(e) => setNodeText(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="node-color" className="text-right">
-                Color
-              </Label>
-              <div className="col-span-3">
-                <div className="flex space-x-2">
+      {/* Edit Dialog */}
+      {!viewOnly && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Node</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div>
+                <Label>Label</Label>
+                <Input
+                  value={nodeText}
+                  onChange={(e) => setNodeText(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Color</Label>
+                <div className="flex gap-2 mt-1">
                   {nodeColors.map((color) => (
                     <button
                       key={color}
@@ -258,20 +587,15 @@ export function MindMapEditor({
                 </div>
               </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={deleteNode}>
-              Delete
-            </Button>
-            <Button onClick={updateNode}>
-              Update
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+            <DialogFooter>
+              <Button variant="destructive" onClick={deleteNode}>
+                <Trash2 className="h-4 w-4 mr-1" /> Delete
+              </Button>
+              <Button onClick={updateNode}>Update</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div >
   );
 }

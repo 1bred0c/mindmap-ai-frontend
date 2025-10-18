@@ -1,32 +1,86 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card, CardContent, CardDescription, CardHeader, CardTitle
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { mockMindmaps, mockWorkspaces } from '@/lib/mock-data';
-import { Plus, Brain, Search, MoveHorizontal as MoreHorizontal, Calendar, Folder } from 'lucide-react';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import Link from 'next/link';
+import {
+  Plus, Brain, Search, MoveHorizontal as MoreHorizontal, Calendar, Folder
+} from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { useState } from 'react';
+import { toast } from 'sonner';
+
+// ✅ Type định nghĩa đúng theo API trả về
+type Mindmap = {
+  mindMapId: number;
+  title: string;
+  description: string;
+  workspaceId: number;
+  ownerId: number;
+  createdAt: string;
+  updatedAt: string;
+  public: boolean;
+};
+
+// ✅ Base API URL
+const API_ENDPOINT =
+  process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:8080/api/v1';
 
 export default function MindmapsPage() {
+  const [mindmaps, setMindmaps] = useState<Mindmap[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const filteredMindmaps = mockMindmaps.filter(mindmap =>
-    mindmap.title.toLowerCase().includes(searchQuery.toLowerCase())
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<number | null>(null);
+  // 🔹 Fetch mindmaps khi page load
+  useEffect(() => {
+    const fetchMindmaps = async () => {
+      try {
+        const userData = localStorage.getItem('user');
+        const parsedUser = userData ? JSON.parse(userData) : null;
+        const userId = parsedUser?.userId ?? 1;
+        setUserId(parsedUser?.userId ?? null);
+        const res = await fetch(`${API_ENDPOINT}/mindmap/owner/${userId}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          },
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch mindmaps');
+        const data = await res.json();
+        setMindmaps(data);
+      } catch (error) {
+        console.error(error);
+        toast.error('Cannot load mind maps');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMindmaps();
+  }, []);
+
+  // 🔹 Lọc theo từ khóa
+  const filteredMindmaps = mindmaps.filter((m) =>
+    m.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getWorkspaceName = (workspaceId: string) => {
-    return mockWorkspaces.find(w => w.id === workspaceId)?.name || 'Unknown';
-  };
+  // 🔹 Loading UI
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="p-6 text-center">Loading mind maps...</div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -61,7 +115,7 @@ export default function MindmapsPage() {
         {/* Mind Maps Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredMindmaps.map((mindmap) => (
-            <Card key={mindmap.id} className="hover:shadow-md transition-shadow group">
+            <Card key={mindmap.mindMapId} className="hover:shadow-md transition-shadow group">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -75,16 +129,12 @@ export default function MindmapsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link href={`/mindmaps/${mindmap.id}/edit`}>
+                        <Link href={`/mindmaps/${mindmap.mindMapId}/edit`}>
                           Edit Mind Map
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        Duplicate
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        Export
-                      </DropdownMenuItem>
+                      <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                      <DropdownMenuItem>Export</DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive">
                         Delete Mind Map
                       </DropdownMenuItem>
@@ -93,7 +143,10 @@ export default function MindmapsPage() {
                 </div>
                 <CardTitle className="text-lg">{mindmap.title}</CardTitle>
                 <CardDescription>
-                  Last modified {formatDistanceToNow(new Date(mindmap.updatedAt), { addSuffix: true })}
+                  Last modified{' '}
+                  {formatDistanceToNow(new Date(mindmap.updatedAt), {
+                    addSuffix: true,
+                  })}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -101,17 +154,22 @@ export default function MindmapsPage() {
                   <div className="flex items-center space-x-2">
                     <Folder className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">
-                      {getWorkspaceName(mindmap.workspaceId)}
+                      Workspace {mindmap.title}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                     <span>
-                      Created {formatDistanceToNow(new Date(mindmap.createdAt), { addSuffix: true })}
+                      Created{' '}
+                      {formatDistanceToNow(new Date(mindmap.createdAt), {
+                        addSuffix: true,
+                      })}
                     </span>
                   </div>
                   <Button className="w-full" asChild>
-                    <Link href={`/mindmaps/${mindmap.id}`}>
+                    <Link
+                      href={`/mindmaps/${mindmap.mindMapId}?userId=${userId}`}
+                    >
                       Open Mind Map
                     </Link>
                   </Button>
@@ -130,10 +188,9 @@ export default function MindmapsPage() {
                 {searchQuery ? 'No mind maps found' : 'No mind maps yet'}
               </CardTitle>
               <CardDescription className="mb-6">
-                {searchQuery 
+                {searchQuery
                   ? 'Try adjusting your search terms.'
-                  : 'Create your first mind map to get started.'
-                }
+                  : 'Create your first mind map to get started.'}
               </CardDescription>
               {!searchQuery && (
                 <Button asChild>

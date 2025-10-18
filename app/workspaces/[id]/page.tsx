@@ -1,19 +1,19 @@
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
-import { mockWorkspaces, mockMindmaps } from '@/lib/mock-data';
 import WorkspaceDetailClient from './WorkspaceDetailClient';
 
-export function generateStaticParams() {
-  return mockWorkspaces.map(workspace => ({ id: workspace.id }));
+export async function generateStaticParams() {
+  return []; // bỏ static prebuild để tránh lỗi export
 }
 
-export default function WorkspaceDetailPage({ params }: { params: { id: string } }) {
-  const workspaceId = params.id;
-  const workspace = mockWorkspaces.find(w => w.id === workspaceId);
-  const workspaceMindmaps = mockMindmaps.filter(m => m.workspaceId === workspaceId);
+export default async function WorkspaceDetailPage({ params }: { params: { id: string } }) {
+  const res = await fetch(`http://localhost:8080/api/v1/workspaces/${params.id}`, {
+    cache: 'no-store',
+  });
+  const workspace = await res.json();
 
   return (
     <DashboardLayout>
-      <WorkspaceDetailClient workspace={workspace} mindmaps={workspaceMindmaps} />
+      <WorkspaceDetailClient workspace={workspace} mindmaps={[]} />
     </DashboardLayout>
   );
 }

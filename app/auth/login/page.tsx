@@ -22,12 +22,34 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Mock login - in real app, this would call your auth API
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const res = await fetch('http://localhost:8080/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.message || 'Invalid email or password');
+      }
+
+      const data = await res.json();
+      const { token, userId, fullName, avatarUrl, role } = data;
+
+      // ✅ Lưu thông tin vào localStorage
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify({ userId, fullName, avatarUrl, role }));
+
+      // ✅ Chuyển hướng sau khi login thành công
       router.push('/dashboard');
-    }, 1000);
+    } catch (err: any) {
+      alert(err.message || 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     setIsLoading(true);
@@ -40,10 +62,14 @@ export default function LoginPage() {
         body: JSON.stringify({ idToken }),
       });
       if (!res.ok) throw new Error('Google login failed');
-      const { token, name, avatarUrl, role } = await res.json();
-      // Lưu token, user info (ví dụ localStorage hoặc context)
+      if (!res.ok) throw new Error('Google login failed');
+      const { token, userId, fullName, avatarUrl, role } = await res.json();
+
+      // 🔐 Lưu token và user info vào localStorage
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify({ name, avatarUrl, role }));
+      localStorage.setItem('user', JSON.stringify({ userId, fullName, avatarUrl, role }));
+
+
       router.push('/dashboard');
     } catch (err) {
       alert('Google login failed');

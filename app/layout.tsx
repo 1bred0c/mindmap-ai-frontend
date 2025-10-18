@@ -10,6 +10,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'MindMap Pro - AI-Powered Mind Mapping',
   description: 'Create, organize, and share your ideas with intelligent mind mapping tools',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({

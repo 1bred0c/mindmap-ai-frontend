@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Brain, Sparkles, Users, Zap } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Logo } from '@/components/logo';
 
 const features = [
   {
@@ -50,10 +51,7 @@ export default function HomePage() {
       
       {/* ✅ Navigation */}
       <nav className="relative z-10 flex items-center justify-between p-6 max-w-7xl mx-auto backdrop-blur-sm">
-        <h1 className="text-2xl font-bold font-display">
-          <span className="text-glow-purple">MindMap</span>
-          <span className="text-cyan-400"> Pro</span>
-        </h1>
+        <Logo size="md" />
 
         <div className="flex items-center space-x-4">
           {/* Khi chưa đăng nhập */}

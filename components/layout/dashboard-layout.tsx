@@ -4,6 +4,7 @@ import { Sidebar } from '@/components/sidebar';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { LogoIcon } from '@/components/logo';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { LogOut } from 'lucide-react';
@@ -33,9 +34,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <Sidebar />
       <div className="lg:pl-64">
         <header className="bg-background border-b h-16 flex items-center justify-between px-4 lg:px-6">
-          <div className="lg:hidden" /> {/* Placeholder cho menu di động */}
+          {/* Logo on mobile */}
+          <div className="lg:hidden">
+            <LogoIcon size="sm" />
+          </div>
 
-          <div className="flex items-center space-x-4 w-full justify-between">
+          <div className="flex items-center space-x-4 w-full justify-between lg:justify-end">
             {/* ✅ Avatar + user info (click được để xem profile) */}
             <Link
               href="/profile"

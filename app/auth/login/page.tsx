@@ -11,6 +11,8 @@ import { Separator } from '@/components/ui/separator';
 import { Eye, EyeOff } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { GoogleLogin } from '@react-oauth/google';
+import { Logo } from '@/components/logo';
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -89,12 +91,9 @@ export default function LoginPage() {
            style={{ animationDelay: '2s' }} />
       
       <div className="relative z-10 w-full max-w-md px-4 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <Link href="/" className="text-2xl font-bold font-display">
-            <span className="text-glow-purple">MindMap</span>
-            <span className="text-cyan-400"> Pro</span>
-          </Link>
+        {/* Header with Logo */}
+        <div className="flex items-center justify-center mb-4">
+          <Logo size="lg" />
         </div>
 
         <Card className="backdrop-blur-2xl">

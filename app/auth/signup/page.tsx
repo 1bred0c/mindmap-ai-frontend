@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { send } from 'emailjs-com';
 import { Eye, EyeOff, TimerReset } from 'lucide-react';
+import { Logo } from '@/components/logo';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -168,7 +169,12 @@ export default function SignupPage() {
       <div className="absolute bottom-20 left-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse-glow" 
            style={{ animationDelay: '1.5s' }} />
       
-      <Card className="w-full max-w-md relative z-10 backdrop-blur-2xl">
+      {/* Logo at top */}
+      <div className="absolute top-8 left-1/2 -translate-x-1/2 z-20">
+        <Logo size="md" />
+      </div>
+      
+      <Card className="w-full max-w-md relative z-10 backdrop-blur-2xl mt-16">
         <CardHeader className="text-center space-y-3">
           <CardTitle className="text-3xl font-display">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">

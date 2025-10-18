@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Logo, LogoIcon } from '@/components/logo';
 import { useState } from 'react';
 
 const navigation = [
@@ -74,10 +75,12 @@ interface SidebarContentProps {
 
 function SidebarContent({ pathname, onLinkClick }: SidebarContentProps) {
   return (
-    <div className="flex flex-col flex-grow bg-background border-r">
-      <div className="flex items-center justify-center h-16 px-4 border-b">
-        <h1 className="text-xl font-bold text-primary">MindMap Pro</h1>
+    <div className="flex flex-col flex-grow bg-background border-r backdrop-blur-xl bg-opacity-95">
+      {/* Logo Section with Neon Glow */}
+      <div className="flex items-center justify-center h-16 px-4 border-b border-purple-500/20">
+        <Logo size="md" />
       </div>
+      
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -87,16 +90,18 @@ function SidebarContent({ pathname, onLinkClick }: SidebarContentProps) {
               href={item.href}
               onClick={onLinkClick}
               className={cn(
-                'group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200',
+                'group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200',
                 isActive
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  ? 'bg-gradient-to-r from-purple-500/20 to-cyan-500/20 text-white shadow-[0_0_15px_rgba(139,92,246,0.3)] border border-purple-500/30'
+                  : 'text-gray-400 hover:bg-white/5 hover:text-white hover:shadow-[0_0_10px_rgba(139,92,246,0.2)]'
               )}
             >
               <item.icon
                 className={cn(
-                  'mr-3 h-5 w-5 transition-colors',
-                  isActive ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-accent-foreground'
+                  'mr-3 h-5 w-5 transition-all duration-200',
+                  isActive 
+                    ? 'text-cyan-400' 
+                    : 'text-gray-500 group-hover:text-purple-400'
                 )}
               />
               {item.name}

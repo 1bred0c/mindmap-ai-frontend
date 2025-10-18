@@ -18,7 +18,9 @@ export const UploadReceipt = ({ onSuccess, onClose }: { onSuccess?: () => void; 
                 alert('Vui lòng chọn ảnh!')
                 return
             }
-            const userId = localStorage.getItem('userId')
+            const userData = localStorage.getItem('user');
+            const parsedUser = userData ? JSON.parse(userData) : null;
+            const userId = parsedUser?.userId ?? 1;
             if (!userId) {
                 alert('Bạn cần đăng nhập trước!')
                 return

@@ -1,0 +1,474 @@
+/* ========================================
+   COSMIC MINDMAP NODE SHAPES STYLES
+   Dark Theme with Neon Glow Effects
+   ======================================== */
+
+/* Base Node Handle Styling */
+.node-handle {
+  width: 10px !important;
+  height: 10px !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid var(--node-color, #3b82f6) !important;
+  box-shadow: 0 0 8px var(--node-color, #3b82f6) !important;
+  transition: all 0.3s ease !important;
+}
+
+.node-handle:hover {
+  transform: scale(1.3);
+  box-shadow: 0 0 16px var(--node-color, #3b82f6) !important;
+}
+
+/* ========================================
+   RECTANGLE - Classic Box with Rounded Corners
+   ======================================== */
+.node-rectangle {
+  min-width: 120px;
+  min-height: 50px;
+  border-radius: 12px;
+  border: 2px solid var(--node-color);
+  box-shadow: 
+    0 0 20px rgba(139, 92, 246, 0.4),
+    inset 0 0 15px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.node-rectangle:hover {
+  transform: scale(1.05);
+  box-shadow: 
+    0 0 30px rgba(139, 92, 246, 0.7),
+    inset 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+.node-rectangle.node-selected {
+  border-width: 3px;
+  box-shadow: 
+    0 0 40px rgba(139, 92, 246, 1),
+    0 0 20px rgba(139, 92, 246, 0.8),
+    inset 0 0 25px rgba(255, 255, 255, 0.2);
+  animation: pulse-purple 2s ease-in-out infinite;
+}
+
+/* ========================================
+   CIRCLE - Perfect Round Shape
+   ======================================== */
+.node-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 2px solid var(--node-color);
+  box-shadow: 
+    0 0 20px rgba(0, 255, 255, 0.5),
+    inset 0 0 15px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.node-circle:hover {
+  transform: scale(1.08);
+  box-shadow: 
+    0 0 35px rgba(0, 255, 255, 0.8),
+    inset 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+.node-circle.node-selected {
+  border-width: 3px;
+  box-shadow: 
+    0 0 50px rgba(0, 255, 255, 1),
+    0 0 25px rgba(0, 255, 255, 0.8),
+    inset 0 0 25px rgba(255, 255, 255, 0.2);
+  animation: pulse-cyan 2s ease-in-out infinite;
+}
+
+/* ========================================
+   ELLIPSE - Horizontal Oval
+   ======================================== */
+.node-ellipse {
+  width: 140px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid var(--node-color);
+  box-shadow: 
+    0 0 20px rgba(0, 255, 179, 0.5),
+    inset 0 0 15px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.node-ellipse:hover {
+  transform: scale(1.06);
+  box-shadow: 
+    0 0 32px rgba(0, 255, 179, 0.8),
+    inset 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+.node-ellipse.node-selected {
+  border-width: 3px;
+  box-shadow: 
+    0 0 45px rgba(0, 255, 179, 1),
+    0 0 22px rgba(0, 255, 179, 0.8),
+    inset 0 0 25px rgba(255, 255, 255, 0.2);
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+/* ========================================
+   DIAMOND - 45° Rotated Square
+   ======================================== */
+.node-diamond {
+  width: 100px;
+  height: 100px;
+  transform: rotate(45deg);
+  border: 2px solid var(--node-color);
+  border-radius: 8px;
+  box-shadow: 
+    0 0 20px rgba(34, 211, 238, 0.5),
+    inset 0 0 15px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.node-diamond > div {
+  transform: rotate(-45deg);
+}
+
+.node-diamond:hover {
+  transform: rotate(45deg) scale(1.08);
+  box-shadow: 
+    0 0 35px rgba(34, 211, 238, 0.8),
+    inset 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+.node-diamond.node-selected {
+  border-width: 3px;
+  box-shadow: 
+    0 0 50px rgba(34, 211, 238, 1),
+    0 0 25px rgba(34, 211, 238, 0.8),
+    inset 0 0 25px rgba(255, 255, 255, 0.2);
+  animation: pulse-sky 2s ease-in-out infinite;
+}
+
+/* ========================================
+   HEXAGON - Six-sided Polygon
+   ======================================== */
+.node-hexagon {
+  width: 110px;
+  height: 95px;
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  border: none;
+  box-shadow: 
+    0 0 20px rgba(245, 158, 11, 0.5),
+    inset 0 0 15px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.node-hexagon:hover {
+  transform: scale(1.06);
+  box-shadow: 
+    0 0 32px rgba(245, 158, 11, 0.8),
+    inset 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+.node-hexagon.node-selected {
+  box-shadow: 
+    0 0 45px rgba(245, 158, 11, 1),
+    0 0 22px rgba(245, 158, 11, 0.8),
+    inset 0 0 25px rgba(255, 255, 255, 0.2);
+  animation: pulse-amber 2s ease-in-out infinite;
+}
+
+/* ========================================
+   OCTAGON - Eight-sided Polygon
+   ======================================== */
+.node-octagon {
+  width: 110px;
+  height: 110px;
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+  border: none;
+  box-shadow: 
+    0 0 20px rgba(239, 68, 68, 0.5),
+    inset 0 0 15px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.node-octagon:hover {
+  transform: scale(1.06);
+  box-shadow: 
+    0 0 32px rgba(239, 68, 68, 0.8),
+    inset 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+.node-octagon.node-selected {
+  box-shadow: 
+    0 0 45px rgba(239, 68, 68, 1),
+    0 0 22px rgba(239, 68, 68, 0.8),
+    inset 0 0 25px rgba(255, 255, 255, 0.2);
+  animation: pulse-red 2s ease-in-out infinite;
+}
+
+/* ========================================
+   PARALLELOGRAM - Skewed Rectangle
+   ======================================== */
+.node-parallelogram {
+  width: 130px;
+  height: 70px;
+  transform: skewX(-15deg);
+  border: 2px solid var(--node-color);
+  border-radius: 8px;
+  box-shadow: 
+    0 0 20px rgba(132, 204, 22, 0.5),
+    inset 0 0 15px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.node-parallelogram > div {
+  transform: skewX(15deg);
+}
+
+.node-parallelogram:hover {
+  transform: skewX(-15deg) scale(1.05);
+  box-shadow: 
+    0 0 32px rgba(132, 204, 22, 0.8),
+    inset 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+.node-parallelogram.node-selected {
+  border-width: 3px;
+  box-shadow: 
+    0 0 45px rgba(132, 204, 22, 1),
+    0 0 22px rgba(132, 204, 22, 0.8),
+    inset 0 0 25px rgba(255, 255, 255, 0.2);
+  animation: pulse-lime 2s ease-in-out infinite;
+}
+
+/* ========================================
+   TRAPEZOID - Tapered Rectangle
+   ======================================== */
+.node-trapezoid {
+  width: 130px;
+  height: 80px;
+  clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%);
+  border: none;
+  box-shadow: 
+    0 0 20px rgba(249, 115, 22, 0.5),
+    inset 0 0 15px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.node-trapezoid:hover {
+  transform: scale(1.05);
+  box-shadow: 
+    0 0 32px rgba(249, 115, 22, 0.8),
+    inset 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+.node-trapezoid.node-selected {
+  box-shadow: 
+    0 0 45px rgba(249, 115, 22, 1),
+    0 0 22px rgba(249, 115, 22, 0.8),
+    inset 0 0 25px rgba(255, 255, 255, 0.2);
+  animation: pulse-orange 2s ease-in-out infinite;
+}
+
+/* ========================================
+   STAR - Five-pointed Star (SVG)
+   ======================================== */
+.star-path {
+  transition: all 0.3s ease;
+}
+
+/* Hover effect for star container */
+.relative:has(.star-path):hover {
+  transform: scale(1.08);
+}
+
+/* Selected animation */
+@keyframes pulse-star {
+  0%, 100% {
+    filter: drop-shadow(0 0 25px var(--node-color)) drop-shadow(0 0 15px var(--node-color));
+  }
+  50% {
+    filter: drop-shadow(0 0 40px var(--node-color)) drop-shadow(0 0 25px var(--node-color));
+  }
+}
+
+/* ========================================
+   CLOUD - Organic Cloud Shape (SVG)
+   ======================================== */
+.cloud-path {
+  transition: all 0.3s ease;
+}
+
+/* Hover effect for cloud container */
+.relative:has(.cloud-path):hover {
+  transform: scale(1.06);
+}
+
+/* Selected animation */
+@keyframes pulse-cloud {
+  0%, 100% {
+    filter: drop-shadow(0 0 25px var(--node-color)) drop-shadow(0 0 15px var(--node-color));
+  }
+  50% {
+    filter: drop-shadow(0 0 40px var(--node-color)) drop-shadow(0 0 25px var(--node-color));
+  }
+}
+
+/* ========================================
+   ANIMATIONS - Pulsing Glow Effects
+   ======================================== */
+@keyframes pulse-purple {
+  0%, 100% {
+    box-shadow: 
+      0 0 40px rgba(139, 92, 246, 1),
+      0 0 20px rgba(139, 92, 246, 0.8),
+      inset 0 0 25px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 60px rgba(139, 92, 246, 1),
+      0 0 30px rgba(139, 92, 246, 1),
+      inset 0 0 30px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes pulse-cyan {
+  0%, 100% {
+    box-shadow: 
+      0 0 50px rgba(0, 255, 255, 1),
+      0 0 25px rgba(0, 255, 255, 0.8),
+      inset 0 0 25px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 70px rgba(0, 255, 255, 1),
+      0 0 35px rgba(0, 255, 255, 1),
+      inset 0 0 30px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes pulse-green {
+  0%, 100% {
+    box-shadow: 
+      0 0 45px rgba(0, 255, 179, 1),
+      0 0 22px rgba(0, 255, 179, 0.8),
+      inset 0 0 25px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 65px rgba(0, 255, 179, 1),
+      0 0 32px rgba(0, 255, 179, 1),
+      inset 0 0 30px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes pulse-sky {
+  0%, 100% {
+    box-shadow: 
+      0 0 50px rgba(34, 211, 238, 1),
+      0 0 25px rgba(34, 211, 238, 0.8),
+      inset 0 0 25px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 70px rgba(34, 211, 238, 1),
+      0 0 35px rgba(34, 211, 238, 1),
+      inset 0 0 30px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes pulse-amber {
+  0%, 100% {
+    box-shadow: 
+      0 0 45px rgba(245, 158, 11, 1),
+      0 0 22px rgba(245, 158, 11, 0.8),
+      inset 0 0 25px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 65px rgba(245, 158, 11, 1),
+      0 0 32px rgba(245, 158, 11, 1),
+      inset 0 0 30px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes pulse-red {
+  0%, 100% {
+    box-shadow: 
+      0 0 45px rgba(239, 68, 68, 1),
+      0 0 22px rgba(239, 68, 68, 0.8),
+      inset 0 0 25px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 65px rgba(239, 68, 68, 1),
+      0 0 32px rgba(239, 68, 68, 1),
+      inset 0 0 30px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes pulse-lime {
+  0%, 100% {
+    box-shadow: 
+      0 0 45px rgba(132, 204, 22, 1),
+      0 0 22px rgba(132, 204, 22, 0.8),
+      inset 0 0 25px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 65px rgba(132, 204, 22, 1),
+      0 0 32px rgba(132, 204, 22, 1),
+      inset 0 0 30px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes pulse-orange {
+  0%, 100% {
+    box-shadow: 
+      0 0 45px rgba(249, 115, 22, 1),
+      0 0 22px rgba(249, 115, 22, 0.8),
+      inset 0 0 25px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 65px rgba(249, 115, 22, 1),
+      0 0 32px rgba(249, 115, 22, 1),
+      inset 0 0 30px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes pulse-star {
+  0%, 100% {
+    filter: drop-shadow(0 0 25px var(--node-color)) drop-shadow(0 0 15px var(--node-color));
+  }
+  50% {
+    filter: drop-shadow(0 0 40px var(--node-color)) drop-shadow(0 0 25px var(--node-color));
+  }
+}
+
+@keyframes pulse-cloud {
+  0%, 100% {
+    filter: drop-shadow(0 0 25px var(--node-color)) drop-shadow(0 0 15px var(--node-color));
+  }
+  50% {
+    filter: drop-shadow(0 0 40px var(--node-color)) drop-shadow(0 0 25px var(--node-color));
+  }
+}
+
+/* ========================================
+   RESPONSIVE & DARK THEME OPTIMIZATIONS
+   ======================================== */
+@media (max-width: 768px) {
+  .node-rectangle, .node-ellipse, .node-parallelogram, .node-trapezoid {
+    min-width: 100px;
+    font-size: 12px;
+  }
+  
+  .node-circle, .node-diamond, .node-hexagon, .node-octagon {
+    width: 80px;
+    height: 80px;
+    font-size: 12px;
+  }
+}
+
+/* Dark theme specific enhancements */
+@media (prefers-color-scheme: dark) {
+  .node-handle {
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
+}

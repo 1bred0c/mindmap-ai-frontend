@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -29,7 +29,11 @@ import {
 import { Plus, Save, Download, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
+import CustomNode, { NodeShape } from '@/components/custom-node';
+import { ShapeSelector } from '@/components/shape-selector';
+import { useUpdateNodeShape } from '@/hooks/use-update-node-shape';
 import '@xyflow/react/dist/style.css';
+import '../app/node-shapes.css';
 
 const nodeColors = [
   '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316',
@@ -52,12 +56,18 @@ export function MindMapEditor({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [nodeText, setNodeText] = useState('');
   const [nodeColor, setNodeColor] = useState('#3b82f6');
+  const [nodeShape, setNodeShape] = useState<NodeShape>('RECTANGLE');
   const [loading, setLoading] = useState(true);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 
   const [editingEdgeId, setEditingEdgeId] = useState<string | null>(null);
   const [editingLabel, setEditingLabel] = useState('');
   const [labelPosition, setLabelPosition] = useState<{ x: number; y: number } | null>(null);
+
+  const { updateNodeShape } = useUpdateNodeShape();
+
+  // 🔹 Register custom node types
+  const nodeTypes = useMemo(() => ({ customNode: CustomNode }), []);
 
   const onEdgeDoubleClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
@@ -155,17 +165,13 @@ export function MindMapEditor({
         setNodes(
           nodeData.map((n) => ({
             id: String(n.node_id),
-            data: { label: n.content },
-            position: { x: n.position_x, y: n.position_y },
-            style: {
-              background: n.color || '#3b82f6',
-              color: 'white',
-              borderRadius: '8px',
-              padding: '6px 10px',
-              fontSize: 14,
-              fontWeight: 500,
-              boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+            type: 'customNode',
+            data: { 
+              label: n.content,
+              shape: (n.shape as NodeShape) || 'RECTANGLE',
+              color: n.color || '#3b82f6'
             },
+            position: { x: n.position_x, y: n.position_y },
           }))
         );
 
@@ -198,15 +204,13 @@ export function MindMapEditor({
               ...prev,
               {
                 id: String(n.node_id),
-                data: { label: n.content },
-                position: { x: n.position_x, y: n.position_y },
-                style: {
-                  background: n.color || '#3b82f6',
-                  color: 'white',
-                  borderRadius: '8px',
-                  padding: '6px 10px',
-                  fontWeight: 500,
+                type: 'customNode',
+                data: { 
+                  label: n.content,
+                  shape: (n.shape as NodeShape) || 'RECTANGLE',
+                  color: n.color || '#3b82f6'
                 },
+                position: { x: n.position_x, y: n.position_y },
               },
             ]);
           }
@@ -216,7 +220,15 @@ export function MindMapEditor({
             setNodes((prev) =>
               prev.map((node) =>
                 node.id === String(n.node_id)
-                  ? { ...node, data: { label: n.content }, position: { x: n.position_x, y: n.position_y } }
+                  ? { 
+                      ...node, 
+                      data: { 
+                        label: n.content,
+                        shape: (n.shape as NodeShape) || 'RECTANGLE',
+                        color: n.color || '#3b82f6'
+                      }, 
+                      position: { x: n.position_x, y: n.position_y } 
+                    }
                   : node
               )
             );
@@ -276,7 +288,7 @@ export function MindMapEditor({
     };
 
 
-  }, [mindMapId]);
+  }, [mindMapId, setNodes, setEdges]);
 
   // 🔹 Add new node
   const addNewNode = useCallback(async () => {
@@ -300,30 +312,27 @@ export function MindMapEditor({
       ...nds,
       {
         id: String(data.node_id),
-        data: { label: data.content },
-        position: { x: data.position_x, y: data.position_y },
-        style: {
-          background: data.color || '#3b82f6',
-          color: 'white',
-          borderRadius: '8px',
-          padding: '6px 10px',
-          fontSize: 14,
-          fontWeight: 500,
-          boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+        type: 'customNode',
+        data: { 
+          label: data.content,
+          shape: (data.shape as NodeShape) || 'RECTANGLE',
+          color: data.color || '#3b82f6'
         },
+        position: { x: data.position_x, y: data.position_y },
       },
     ]);
 
     toast.success('✅ Node added');
   }, [mindMapId, setNodes]);
 
-  // 🔹 Update node (label, color)
+  // 🔹 Update node (label, color, shape)
   const updateNode = useCallback(async () => {
     if (!selectedNode) return;
 
     const updatedData = {
       content: nodeText,
       color: nodeColor,
+      shape: nodeShape,
       position_x: selectedNode.position.x,
       position_y: selectedNode.position.y,
     };
@@ -334,8 +343,11 @@ export function MindMapEditor({
         n.id === selectedNode.id
           ? {
             ...n,
-            data: { label: nodeText },
-            style: { ...n.style, background: nodeColor },
+            data: { 
+              label: nodeText,
+              shape: nodeShape,
+              color: nodeColor
+            },
           }
           : n
       )
@@ -355,7 +367,7 @@ export function MindMapEditor({
 
     toast.success('💾 Node updated');
     setIsEditDialogOpen(false);
-  }, [selectedNode, nodeText, nodeColor, setNodes]);
+  }, [selectedNode, nodeText, nodeColor, nodeShape, setNodes]);
 
 
 
@@ -462,8 +474,10 @@ export function MindMapEditor({
   // 🔹 Click to edit node
   const onNodeClick = useCallback((_: any, node: Node) => {
     setSelectedNode(node);
-    setNodeText(String((node.data as { label?: string }).label ?? ''));
-    setNodeColor(String((node.style?.background ?? '#3b82f6')));
+    const nodeData = node.data as { label?: string; color?: string; shape?: NodeShape };
+    setNodeText(String(nodeData.label ?? ''));
+    setNodeColor(String(nodeData.color ?? '#3b82f6'));
+    setNodeShape(nodeData.shape ?? 'RECTANGLE');
 
     setIsEditDialogOpen(true);
   }, []);
@@ -496,6 +510,7 @@ export function MindMapEditor({
         <ReactFlow
           nodes={nodes}
           edges={edges}
+          nodeTypes={nodeTypes}
           onConnect={!viewOnly ? onConnect : undefined}
           onEdgeClick={!viewOnly ? onEdgeClick : undefined}
           onNodesChange={!viewOnly ? onNodesChange : undefined}
@@ -572,6 +587,12 @@ export function MindMapEditor({
                   onChange={(e) => setNodeText(e.target.value)}
                 />
               </div>
+              
+              <ShapeSelector 
+                selectedShape={nodeShape}
+                onShapeChange={setNodeShape}
+              />
+              
               <div>
                 <Label>Color</Label>
                 <div className="flex gap-2 mt-1">

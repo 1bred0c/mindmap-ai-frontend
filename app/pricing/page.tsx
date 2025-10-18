@@ -27,20 +27,15 @@ const plans = [
     features: [
       'Up to 3 workspaces',
       'Up to 10 mind maps',
-      'Basic templates',
-      'Export as PNG',
-      'Community support',
     ],
     limitations: [
       'No AI features',
-      'No real-time collaboration',
-      'Limited export formats',
     ],
     current: true,
   },
   {
     name: 'Premium',
-    price: '99,000',
+    price: '59,000',
     currency: 'VND',
     period: '/month',
     description: 'Everything you need for professional work',
@@ -48,13 +43,6 @@ const plans = [
       'Unlimited workspaces',
       'Unlimited mind maps',
       'AI-powered generation',
-      'Real-time collaboration',
-      'Priority support',
-      'Advanced templates',
-      'Export in all formats',
-      'Custom branding',
-      'Analytics & insights',
-      'Version history',
     ],
     popular: true,
   },
@@ -155,9 +143,15 @@ export default function PricingPage() {
                           {/* QR Momo */}
                           <div className="text-center space-y-3">
                             <p className="font-medium">Scan QR code to pay via MoMo</p>
-                            <div className="mx-auto w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <span className="text-xs text-muted-foreground">MoMo QR Code</span>
+
+                            <div className="mx-auto w-48 h-48 rounded-lg overflow-hidden border">
+                              <img
+                                src="/momo-qr.jpg" // đường dẫn ảnh QR của bạn (ví dụ lưu trong /public)
+                                alt="MoMo QR Code"
+                                className="w-full h-full object-cover"
+                              />
                             </div>
+
                             <p className="text-sm text-muted-foreground">Amount: {plan.price} VND</p>
                           </div>
 

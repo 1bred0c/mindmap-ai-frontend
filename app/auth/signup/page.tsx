@@ -161,11 +161,23 @@ export default function SignupPage() {
   }, [countdown, isCounting]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary/20 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>Sign up with email verification</CardDescription>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden p-4">
+      {/* Cosmic Background */}
+      <div className="absolute inset-0 cosmic-grid opacity-20" />
+      <div className="absolute top-20 right-10 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl animate-pulse-glow" />
+      <div className="absolute bottom-20 left-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse-glow" 
+           style={{ animationDelay: '1.5s' }} />
+      
+      <Card className="w-full max-w-md relative z-10 backdrop-blur-2xl">
+        <CardHeader className="text-center space-y-3">
+          <CardTitle className="text-3xl font-display">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">
+              Create Account
+            </span>
+          </CardTitle>
+          <CardDescription className="text-gray-400">
+            Join the neural universe - verify your email to start
+          </CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -228,9 +240,9 @@ export default function SignupPage() {
               {isSendingOtp ? 'Sending OTP...' : 'Create Account'}
             </Button>
 
-            <p className="text-center text-sm">
+            <p className="text-center text-sm text-gray-400">
               Already have an account?{' '}
-              <Link href="/auth/login" className="text-primary hover:underline">
+              <Link href="/auth/login" className="text-cyan-400 hover:text-cyan-300 transition-colors">
                 Sign in
               </Link>
             </p>

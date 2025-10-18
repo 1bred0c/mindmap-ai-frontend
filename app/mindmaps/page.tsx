@@ -77,25 +77,49 @@ export default function MindmapsPage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="p-6 text-center">Loading mind maps...</div>
+        <div className="p-6 space-y-8">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="h-10 w-48 bg-card/50 rounded-lg animate-shimmer" />
+              <div className="h-4 w-64 bg-card/50 rounded-lg animate-shimmer" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-lg border border-white/10 bg-card/50 p-6 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500/20 to-cyan-500/20 animate-pulse" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-6 w-3/4 bg-card/80 rounded animate-shimmer" />
+                    <div className="h-4 w-1/2 bg-card/80 rounded animate-shimmer" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </DashboardLayout>
     );
   }
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Mind Maps</h1>
-            <p className="text-muted-foreground">
-              All your mind maps across different workspaces.
+            <h1 className="text-4xl font-bold font-display mb-2">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
+                Mind Maps
+              </span>
+            </h1>
+            <p className="text-gray-400">
+              Navigate your neural network of interconnected ideas
             </p>
           </div>
-          <Button asChild>
+          <Button asChild className="group mt-4 sm:mt-0">
             <Link href="/mindmaps/new">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
               New Mind Map
             </Link>
           </Button>
@@ -115,11 +139,12 @@ export default function MindmapsPage() {
         {/* Mind Maps Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredMindmaps.map((mindmap) => (
-            <Card key={mindmap.mindMapId} className="hover:shadow-md transition-shadow group">
-              <CardHeader>
+            <Card key={mindmap.mindMapId} className="group hover-lift relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl" />
+              <CardHeader className="relative z-10">
                 <div className="flex items-start justify-between">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Brain className="h-6 w-6 text-primary" />
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500/20 to-cyan-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <Brain className="h-6 w-6 text-cyan-400" />
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

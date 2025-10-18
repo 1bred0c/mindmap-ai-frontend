@@ -32,7 +32,8 @@ export default function LoginPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);
-        throw new Error(errorData?.message || 'Invalid email or password');
+        console.error('Login error:', { status: res.status, data: errorData });
+        throw new Error(errorData?.message || `Login failed with status ${res.status}`);
       }
 
       const data = await res.json();
@@ -80,21 +81,31 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* Cosmic Background */}
+      <div className="absolute inset-0 cosmic-grid opacity-20" />
+      <div className="absolute top-20 left-10 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-pulse-glow" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse-glow" 
+           style={{ animationDelay: '2s' }} />
+      
+      <div className="relative z-10 w-full max-w-md px-4 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Link href="/" className="text-2xl font-bold text-primary">
-            MindMap Pro
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/" className="text-2xl font-bold font-display">
+            <span className="text-glow-purple">MindMap</span>
+            <span className="text-cyan-400"> Pro</span>
           </Link>
-          <ThemeToggle />
         </div>
 
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
-            <CardDescription>
-              Sign in to your account to continue
+        <Card className="backdrop-blur-2xl">
+          <CardHeader className="text-center space-y-3">
+            <CardTitle className="text-3xl font-display">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
+                Welcome Back
+              </span>
+            </CardTitle>
+            <CardDescription className="text-gray-400">
+              Sign in to access your neural universe
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -162,9 +173,9 @@ export default function LoginPage() {
               />
             </div>
 
-            <p className="text-center text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link href="/auth/signup" className="text-primary hover:underline">
+            <p className="text-center text-sm text-gray-400">
+              Don&apos;t have an account?{' '}
+              <Link href="/auth/signup" className="text-cyan-400 hover:text-cyan-300 transition-colors">
                 Sign up
               </Link>
             </p>

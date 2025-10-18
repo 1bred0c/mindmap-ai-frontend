@@ -68,39 +68,86 @@ export default function WorkspaceDetailClient({ workspace }: { workspace: Worksp
 
         const fetchMindmaps = async () => {
             if (!workspace?.workspaceId) return;
+            
+            const token = localStorage.getItem('token');
+            console.log('🔐 Token exists:', !!token);
+            console.log('🔐 Token preview:', token ? token.substring(0, 20) + '...' : 'null');
+            
+            if (!token) {
+                toast.error('Please login to view workspace');
+                window.location.href = '/auth/login';
+                return;
+            }
+            
             try {
+                console.log('📡 Fetching mindmaps from:', `${API_ENDPOINT}/mindmap/workspace/${workspace.workspaceId}`);
+                
                 const res = await fetch(`${API_ENDPOINT}/mindmap/workspace/${workspace.workspaceId}`, {
                     headers: {
                         'Content-Type': 'application/json',
-                        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+                        Authorization: `Bearer ${token}`,
                     },
                 });
 
-                if (!res.ok) throw new Error('Failed to fetch mindmaps');
+                console.log('📡 Response status:', res.status);
+                console.log('📡 Response headers:', Object.fromEntries(res.headers.entries()));
+
+                if (res.status === 401) {
+                    const errorText = await res.text();
+                    console.error('❌ 401 Unauthorized:', errorText);
+                    toast.error('Session expired. Please login again.');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/auth/login';
+                    return;
+                }
+
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    console.error('❌ API Error:', errorText);
+                    throw new Error('Failed to fetch mindmaps');
+                }
+                
                 const data = await res.json();
+                console.log('✅ Mindmaps loaded:', data.length);
                 const filtered = isOwner ? data : data.filter((m: Mindmap) => m.public);
                 setMindmaps(filtered);
             } catch (error) {
-                console.error(error);
+                console.error('❌ Fetch error:', error);
                 toast.error('Cannot load mind maps');
             }
         };
 
         fetchMindmaps();
-    }, [workspace?.workspaceId]);
+    }, [workspace?.workspaceId, isOwner]);
 
 
     // 🔹 Xoá mindmap
     const handleDeleteMindmap = async (mindMapId: number) => {
         if (!confirm('Are you sure you want to delete this mind map?')) return;
 
+        const token = localStorage.getItem('token');
+        if (!token) {
+            toast.error('Please login to delete');
+            window.location.href = '/auth/login';
+            return;
+        }
+
         try {
             const res = await fetch(`${API_ENDPOINT}/mindmap/${mindMapId}`, {
                 method: 'DELETE',
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+                    Authorization: `Bearer ${token}`,
                 },
             });
+
+            if (res.status === 401) {
+                toast.error('Session expired. Please login again.');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/auth/login';
+                return;
+            }
 
             if (!res.ok) throw new Error('Failed to delete mind map');
 
@@ -140,12 +187,26 @@ export default function WorkspaceDetailClient({ workspace }: { workspace: Worksp
     const handleDelete = async () => {
         if (!confirm('Are you sure you want to delete this workspace?')) return;
 
+        const token = localStorage.getItem('token');
+        if (!token) {
+            toast.error('Please login to delete workspace');
+            window.location.href = '/auth/login';
+            return;
+        }
 
         try {
             const res = await fetch(`${API_ENDPOINT}/workspaces/${data?.workspaceId}?userId=${userId}`, {
                 method: 'DELETE',
-                headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+                headers: { Authorization: `Bearer ${token}` },
             });
+
+            if (res.status === 401) {
+                toast.error('Session expired. Please login again.');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/auth/login';
+                return;
+            }
 
             if (!res.ok) throw new Error('Failed to delete workspace');
             toast.success('Workspace deleted successfully!');

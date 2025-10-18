@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Folder, Brain, Users, TrendingUp, Plus } from 'lucide-react'
+import { Folder, Brain, Users, TrendingUp, Plus, Zap } from 'lucide-react'
 import Link from 'next/link'
 
 // ==== Types ====
@@ -158,18 +158,23 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-8">
         {/* ==== Header ==== */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome back! Here's an overview of your workspace and mind maps.
+            <h1 className="text-4xl font-bold font-display mb-2">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
+                Dashboard
+              </span>
+            </h1>
+            <p className="text-gray-400">
+              Welcome back! Navigate your neural network of ideas.
             </p>
           </div>
-          <Button asChild className="mt-4 sm:mt-0">
+          <Button asChild className="mt-4 sm:mt-0 group">
             <Link href="/workspaces/new">
-              <Plus className="h-4 w-4 mr-2" /> New Workspace
+              <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" /> 
+              New Workspace
             </Link>
           </Button>
         </div>
@@ -177,14 +182,21 @@ export default function DashboardPage() {
         {/* ==== Stats ==== */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow">
+            <Card key={index} className="group relative overflow-hidden">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <stat.icon className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium text-gray-400">{stat.title}</CardTitle>
+                <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-cyan-500/20 group-hover:scale-110 transition-transform duration-300">
+                  <stat.icon className="h-4 w-4 text-cyan-400" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="text-3xl font-bold font-display text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
+                  {stat.value}
+                </div>
               </CardContent>
+              
+              {/* Glow line on hover */}
+              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </Card>
           ))}
         </div>
@@ -192,42 +204,51 @@ export default function DashboardPage() {
         {/* ==== Recent Workspaces & Quick Actions ==== */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* ==== Recent Workspaces ==== */}
-          <Card>
+          <Card className="relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl" />
+            
             <CardHeader>
-              <CardTitle>Recent Workspaces</CardTitle>
-              <CardDescription>Your most recently updated workspaces</CardDescription>
+              <CardTitle className="font-display flex items-center gap-2">
+                <Folder className="h-5 w-5 text-cyan-400" />
+                Recent Workspaces
+              </CardTitle>
+              <CardDescription>Your most recently updated neural networks</CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
-                <p className="text-muted-foreground">Loading workspaces...</p>
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+                </div>
               ) : recentWorkspaces.length === 0 ? (
-                <p className="text-muted-foreground">No workspaces found.</p>
+                <p className="text-gray-500 text-center py-8">No workspaces found.</p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {recentWorkspaces.map((ws) => (
                     <div
                       key={ws.workspace_id}
-                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                      className="group flex items-center justify-between p-4 rounded-lg border border-white/5 hover:border-purple-500/30 bg-card/30 hover:bg-card/50 transition-all duration-300"
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Folder className="h-5 w-5 text-primary" />
+                        <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-purple-500/20 to-cyan-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Folder className="h-5 w-5 text-cyan-400" />
                         </div>
                         <div>
-                          <p className="font-medium">{ws.name}</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="font-medium text-white">{ws.name}</p>
+                          <p className="text-sm text-gray-500">
                             {new Date(ws.created_at).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
                       <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/workspaces/${ws.workspace_id}`}>View</Link>
+                        <Link href={`/workspaces/${ws.workspace_id}`}>
+                          View →
+                        </Link>
                       </Button>
                     </div>
                   ))}
                 </div>
               )}
-              <div className="mt-4">
+              <div className="mt-6">
                 <Button variant="outline" className="w-full" asChild>
                   <Link href="/workspaces">View All Workspaces</Link>
                 </Button>
@@ -236,31 +257,40 @@ export default function DashboardPage() {
           </Card>
 
           {/* ==== Quick Actions ==== */}
-          <Card>
+          <Card className="relative overflow-hidden">
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl" />
+            
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Get started with these common tasks</CardDescription>
+              <CardTitle className="font-display flex items-center gap-2">
+                <Zap className="h-5 w-5 text-purple-400" />
+                Quick Actions
+              </CardTitle>
+              <CardDescription>Launch into creation mode</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Button className="w-full justify-start" asChild>
+                <Button className="w-full justify-start group" asChild>
                   <Link href="/workspaces/new">
-                    <Plus className="h-4 w-4 mr-2" /> Create New Workspace
+                    <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" /> 
+                    Create New Workspace
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full justify-start" asChild>
+                <Button variant="outline" className="w-full justify-start group" asChild>
                   <Link href="/ai">
-                    <Brain className="h-4 w-4 mr-2" /> Generate AI Mind Map
+                    <Brain className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" /> 
+                    Generate AI Mind Map
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full justify-start" asChild>
+                <Button variant="outline" className="w-full justify-start group" asChild>
                   <Link href="/mindmaps/new">
-                    <Brain className="h-4 w-4 mr-2" /> Create Mind Map
+                    <Brain className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" /> 
+                    Create Mind Map
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full justify-start" asChild>
+                <Button variant="outline" className="w-full justify-start group" asChild>
                   <Link href="/pricing">
-                    <TrendingUp className="h-4 w-4 mr-2" /> Upgrade to Premium
+                    <TrendingUp className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" /> 
+                    Upgrade to Premium
                   </Link>
                 </Button>
               </div>

@@ -1,6 +1,10 @@
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import WorkspaceDetailClient from './WorkspaceDetailClient';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function generateStaticParams() {
   return []; // bỏ static prebuild để tránh lỗi export
 }

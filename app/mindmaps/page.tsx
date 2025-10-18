@@ -38,7 +38,7 @@ export default function MindmapsPage() {
   const [mindmaps, setMindmaps] = useState<Mindmap[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-
+  const [userId, setUserId] = useState<number | null>(null);
   // 🔹 Fetch mindmaps khi page load
   useEffect(() => {
     const fetchMindmaps = async () => {
@@ -46,7 +46,7 @@ export default function MindmapsPage() {
         const userData = localStorage.getItem('user');
         const parsedUser = userData ? JSON.parse(userData) : null;
         const userId = parsedUser?.userId ?? 1;
-
+        setUserId(parsedUser?.userId ?? null);
         const res = await fetch(`${API_ENDPOINT}/mindmap/owner/${userId}`, {
           headers: {
             'Content-Type': 'application/json',
@@ -167,7 +167,9 @@ export default function MindmapsPage() {
                     </span>
                   </div>
                   <Button className="w-full" asChild>
-                    <Link href={`/mindmaps/${mindmap.mindMapId}`}>
+                    <Link
+                      href={`/mindmaps/${mindmap.mindMapId}?userId=${userId}`}
+                    >
                       Open Mind Map
                     </Link>
                   </Button>

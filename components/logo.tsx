@@ -118,7 +118,7 @@ export function LogoIcon({
         )}>
           <Image
             src="/logo.png"
-            alt="MindMap Pro"
+            alt="ThinkFlow Logo"
             width={48}
             height={48}
             className={cn(

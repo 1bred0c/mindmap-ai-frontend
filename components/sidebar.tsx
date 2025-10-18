@@ -92,8 +92,8 @@ function SidebarContent({ pathname, onLinkClick }: SidebarContentProps) {
               className={cn(
                 'group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200',
                 isActive
-                  ? 'bg-gradient-to-r from-purple-500/20 to-cyan-500/20 text-white shadow-[0_0_15px_rgba(139,92,246,0.3)] border border-purple-500/30'
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white hover:shadow-[0_0_10px_rgba(139,92,246,0.2)]'
+                  ? 'bg-gradient-to-r from-purple-500/20 to-cyan-500/20 text-white dark:text-white shadow-[0_0_15px_rgba(139,92,246,0.3)] border border-purple-500/30'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-white/5 hover:text-purple-600 dark:hover:text-white hover:shadow-[0_0_10px_rgba(139,92,246,0.2)]'
               )}
             >
               <item.icon

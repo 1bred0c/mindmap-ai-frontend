@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <Link href="/" className="text-2xl font-bold text-primary">
-            MindMap Pro
+            ThinkFlow
           </Link>
           <ThemeToggle />
         </div>

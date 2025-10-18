@@ -113,6 +113,9 @@ export default function AIPage() {
       }
 
       const data: GenerateMindmapResponse = await response.json();
+      console.log('🤖 AI Response:', data);
+      console.log('📊 Nodes count:', data.nodes?.length);
+      console.log('🔗 Edges count:', data.edges?.length);
       setGeneratedData(data);
       
       toast({
@@ -136,174 +139,24 @@ export default function AIPage() {
     setInputText(`Create a mind map for ${suggestion.title.toLowerCase()}: ${suggestion.description}`);
   };
 
-  const createMindMap = async () => {
+  const createMindMap = () => {
     if (!generatedData) return;
     
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
+    // Lưu dữ liệu AI vào sessionStorage để sử dụng sau khi tạo mindmap
+    sessionStorage.setItem('aiGeneratedMindmap', JSON.stringify({
+      title: generatedData.title,
+      nodes: generatedData.nodes,
+      edges: generatedData.edges,
+      prompt: inputText
+    }));
     
-    if (!token || !userData) {
-      toast({
-        title: "Lỗi xác thực",
-        description: "Vui lòng đăng nhập để tạo mindmap",
-        variant: "destructive",
-      });
-      router.push('/auth/login');
-      return;
-    }
-
-    const parsedUser = JSON.parse(userData);
-    const ownerId = parsedUser?.userId;
-
-    if (!ownerId) {
-      toast({
-        title: "Lỗi",
-        description: "Không tìm thấy thông tin người dùng",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsGenerating(true);
+    toast({
+      title: "Đang chuyển hướng...",
+      description: "Chuyển đến trang tạo mindmap",
+    });
     
-    try {
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT;
-      
-      // 1. Lấy danh sách workspace của user
-      const workspacesRes = await fetch(`${API_BASE_URL}/workspaces/owner/${ownerId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!workspacesRes.ok) {
-        throw new Error('Không thể tải danh sách workspace');
-      }
-
-      const workspaces = await workspacesRes.json();
-      
-      if (!workspaces || workspaces.length === 0) {
-        throw new Error('Bạn cần tạo workspace trước khi tạo mindmap');
-      }
-
-      // Lấy workspace đầu tiên
-      const workspaceId = workspaces[0].workspaceId;
-
-      // 2. Tạo mindmap qua backend API
-      const mindmapRes = await fetch(`${API_BASE_URL}/mindmap?ownerId=${ownerId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: generatedData.title,
-          description: `AI generated mindmap from: ${inputText.substring(0, 100)}...`,
-          workspaceId: workspaceId,
-          public: true,
-        }),
-      });
-
-      if (!mindmapRes.ok) {
-        const errorData = await mindmapRes.text();
-        console.error('Mindmap creation error:', errorData);
-        throw new Error(`Không thể tạo mindmap (HTTP ${mindmapRes.status})`);
-      }
-
-      const newMindmap = await mindmapRes.json();
-      const mindMapId = newMindmap.mindMapId;
-
-      toast({
-        title: "Đã tạo mindmap",
-        description: "Đang tạo các nodes và edges...",
-      });
-
-      // 3. Tạo nodes qua Supabase và map ID
-      const nodeIdMap = new Map<number, number>(); // tempIndex -> realNodeId
-      
-      for (let i = 0; i < generatedData.nodes.length; i++) {
-        const node = generatedData.nodes[i];
-        
-        const { data, error } = await supabase
-          .from('nodes')
-          .insert({
-            mind_map_id: mindMapId,
-            content: node.content,
-            position_x: node.positionX,
-            position_y: node.positionY,
-            color: node.color,
-            shape: node.shape,
-          })
-          .select()
-          .single();
-
-        if (error) {
-          console.error(`Failed to create node ${i}:`, error);
-          continue; // Skip failed nodes
-        }
-
-        if (data) {
-          nodeIdMap.set(i, data.node_id);
-        }
-      }
-
-      toast({
-        title: "Đã tạo nodes",
-        description: `Đã tạo ${nodeIdMap.size}/${generatedData.nodes.length} nodes. Đang tạo kết nối...`,
-      });
-
-      // 4. Tạo edges với ID thực qua Supabase
-      let successEdges = 0;
-      
-      for (const edge of generatedData.edges) {
-        const realFromId = nodeIdMap.get(edge.fromNodeId);
-        const realToId = nodeIdMap.get(edge.toNodeId);
-        
-        if (!realFromId || !realToId) {
-          console.warn('Skip edge due to missing node mapping:', edge);
-          continue;
-        }
-
-        const { error } = await supabase
-          .from('edges')
-          .insert({
-            mind_map_id: mindMapId,
-            from_node_id: realFromId,
-            to_node_id: realToId,
-            label: edge.label || '',
-          });
-
-        if (error) {
-          console.error('Failed to create edge:', error);
-        } else {
-          successEdges++;
-        }
-      }
-
-      toast({
-        title: "Thành công!",
-        description: `Đã tạo mindmap với ${nodeIdMap.size} nodes và ${successEdges} edges. Đang chuyển hướng...`,
-      });
-
-      // 5. Chuyển hướng đến trang mindmap vừa tạo
-      setTimeout(() => {
-        router.push(`/mindmaps/${mindMapId}`);
-      }, 1000);
-
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Có lỗi xảy ra khi tạo mindmap';
-      console.error('Create mindmap error:', err);
-      
-      toast({
-        title: "Lỗi",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      
-      setError(errorMessage);
-    } finally {
-      setIsGenerating(false);
-    }
+    // Chuyển đến trang tạo mindmap mới với flag từ AI
+    router.push('/mindmaps/new?from=ai');
   };
 
   const handleRegenerateNew = () => {
@@ -392,7 +245,7 @@ export default function AIPage() {
         </Card>
 
         {/* Loading State */}
-        {isGenerating && !generatedData && (
+        {isGenerating && (
           <Card className="max-w-4xl mx-auto">
             <CardContent className="py-12">
               <div className="flex flex-col items-center justify-center space-y-4">
@@ -401,23 +254,6 @@ export default function AIPage() {
                   <h3 className="text-lg font-semibold">AI đang tạo mindmap...</h3>
                   <p className="text-sm text-muted-foreground">
                     Quá trình này có thể mất 5-15 giây. Vui lòng đợi.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Creating Mindmap Loading State */}
-        {isGenerating && generatedData && (
-          <Card className="max-w-4xl mx-auto border-blue-500">
-            <CardContent className="py-12">
-              <div className="flex flex-col items-center justify-center space-y-4">
-                <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
-                <div className="text-center space-y-2">
-                  <h3 className="text-lg font-semibold">Đang tạo mindmap...</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Đang lưu mindmap vào database. Vui lòng không tắt trang.
                   </p>
                 </div>
               </div>
@@ -561,25 +397,12 @@ export default function AIPage() {
                 <Button 
                   variant="outline" 
                   onClick={handleRegenerateNew}
-                  disabled={isGenerating}
                 >
                   Tạo mới
                 </Button>
-                <Button 
-                  onClick={createMindMap}
-                  disabled={isGenerating}
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Đang tạo...
-                    </>
-                  ) : (
-                    <>
-                      <Brain className="h-4 w-4 mr-2" />
-                      Tạo Mind Map
-                    </>
-                  )}
+                <Button onClick={createMindMap}>
+                  <Brain className="h-4 w-4 mr-2" />
+                  Tạo Mind Map
                 </Button>
               </div>
             </CardContent>

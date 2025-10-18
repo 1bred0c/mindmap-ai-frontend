@@ -120,10 +120,6 @@ export default function NewMindMapPage() {
                 <MindMapEditor
                     mindMapId={createdMindmap.mindMapId}
                     title={createdMindmap.title}
-                    description={createdMindmap.description}
-                    workspaceId={createdMindmap.workspaceId}
-                    nodes={[]} // nếu bạn có node mặc định thì truyền vào đây
-                    edges={[]}
                 />
             </div>
         );

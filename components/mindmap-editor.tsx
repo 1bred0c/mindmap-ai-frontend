@@ -102,7 +102,7 @@ export function MindMapEditor({
   }, [editingEdgeId, editingLabel, setEdges]);
 
 
-  const onEdgeClick = useCallback((_, edge: Edge) => {
+  const onEdgeClick = useCallback((_event: any, edge: Edge) => {
     setSelectedEdge(edge);
     toast.message(`Selected edge: ${edge.id}`);
   }, []);

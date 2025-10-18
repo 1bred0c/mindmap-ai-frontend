@@ -13,7 +13,7 @@ export default async function WorkspaceDetailPage({ params }: { params: { id: st
 
   return (
     <DashboardLayout>
-      <WorkspaceDetailClient workspace={workspace} mindmaps={[]} />
+      <WorkspaceDetailClient workspace={workspace} />
     </DashboardLayout>
   );
 }

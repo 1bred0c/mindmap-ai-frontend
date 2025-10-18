@@ -4,9 +4,10 @@ import WorkspaceDetailClient from './WorkspaceDetailClient';
 export async function generateStaticParams() {
   return []; // bỏ static prebuild để tránh lỗi export
 }
-
+const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:8080/api/v1';
 export default async function WorkspaceDetailPage({ params }: { params: { id: string } }) {
-  const res = await fetch(`http://localhost:8080/api/v1/workspaces/${params.id}`, {
+
+  const res = await fetch(`${API_ENDPOINT}/workspaces/${params.id}`, {
     cache: 'no-store',
   });
   const workspace = await res.json();

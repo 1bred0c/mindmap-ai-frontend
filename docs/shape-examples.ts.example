@@ -5,6 +5,7 @@
 
 import { useUpdateNodeShape } from '@/hooks/use-update-node-shape';
 import { NodeShape } from '@/components/custom-node';
+import { supabase } from '@/lib/supabaseClient';
 
 // =====================================================
 // EXAMPLE 1: Initial Mindmap Setup

@@ -14,7 +14,7 @@ export default function ProfilePage() {
   const [userData, setUserData] = useState<any>(null);
   const [formData, setFormData] = useState({ fullname: '', email: '' });
   const [isLoading, setIsLoading] = useState(true);
-
+  const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:8080/api/v1';
   // ✅ Lấy thông tin profile từ backend
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -25,7 +25,7 @@ export default function ProfilePage() {
           return;
         }
 
-        const res = await fetch('http://localhost:8080/api/v1/user/profile', {
+        const res = await fetch(`${API_ENDPOINT}/user/profile`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ export default function ProfilePage() {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:8080/api/v1/user/update', {
+      const res = await fetch(`${API_ENDPOINT}/user/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

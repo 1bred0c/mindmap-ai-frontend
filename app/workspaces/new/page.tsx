@@ -12,7 +12,7 @@ export default function NewWorkspacePage() {
     const [description, setDescription] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-
+    const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:8080/api/v1';
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -25,7 +25,7 @@ export default function NewWorkspacePage() {
 
             // 🔹 Gửi request đến backend
             const response = await fetch(
-                `http://localhost:8080/api/v1/workspaces?ownerId=${ownerId}`,
+                `${API_ENDPOINT}/workspaces?ownerId=${ownerId}`,
                 {
                     method: 'POST',
                     headers: {

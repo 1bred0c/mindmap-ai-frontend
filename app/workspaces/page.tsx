@@ -59,6 +59,7 @@ function formatSafeDate(dateStr: string | null): string {
 // -----------------------------
 // 🔹 Main Component
 // -----------------------------
+const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:8080/api/v1';
 export default function WorkspacesPage() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +75,7 @@ export default function WorkspacesPage() {
         const base = process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:8080/api/v1';
 
         // 🔹 1️⃣ Gọi API backend để lấy workspace mà user là owner
-        const res = await fetch(`${base}/workspaces/owner/${userId}`, {
+        const res = await fetch(`${API_ENDPOINT}/workspaces/owner/${userId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
           },
@@ -127,7 +128,7 @@ export default function WorkspacesPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:8080/api/v1/workspaces/${id}?userId=${userId}`,
+        `${API_ENDPOINT}/workspaces/${id}?userId=${userId}`,
         {
           method: 'DELETE',
           headers: {

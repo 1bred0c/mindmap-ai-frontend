@@ -1,216 +1,281 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, EyeOff } from 'lucide-react';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { send } from 'emailjs-com';
+import { Eye, EyeOff, TimerReset } from 'lucide-react';
 
 export default function SignupPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [otp, setOtp] = useState('');
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [otpExpireTime, setOtpExpireTime] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState(60);
+  const [isCounting, setIsCounting] = useState(false);
+  const [showOtpDialog, setShowOtpDialog] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [acceptTerms, setAcceptTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:8080/api/v1';
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  // Tạo OTP 6 số
+  const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Gửi OTP qua email
+  const sendOtpEmail = async (email: string, otpCode: string, name: string) => {
+    await send(
+      'service_cwwsu5a', // EmailJS service ID
+      'template_d3n2lzw', // Template ID
+      { to_email: email, to_name: name, otp_code: otpCode },
+      'bL7P7RjmPGwn3s-Is' // Public key
+    );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!acceptTerms) {
-      alert('You must agree to the terms of service');
-      return;
-    }
 
     if (formData.password !== formData.confirmPassword) {
       alert('Passwords do not match!');
       return;
     }
 
-    setIsLoading(true);
+    const newOtp = generateOTP();
+    setGeneratedOtp(newOtp);
+    setOtpExpireTime(Date.now() + 5 * 60 * 1000); // 5 phút
+    sessionStorage.setItem('otp', newOtp);
+    sessionStorage.setItem('otpExpire', (Date.now() + 5 * 60 * 1000).toString());
 
+    setIsSendingOtp(true);
     try {
-      const res = await fetch('http://localhost:8080/api/v1/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName: formData.name,
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        throw new Error(errorData?.message || 'Registration failed');
-      }
-
-      const data = await res.json();
-      const { token, fullName, avatarUrl, role } = data;
-
-      // ✅ Lưu token và thông tin người dùng
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify({ fullName, avatarUrl, role }));
-
-      // ✅ Chuyển hướng sang dashboard
-      router.push('/dashboard');
-    } catch (err: any) {
-      alert(err.message || 'Registration failed');
+      await sendOtpEmail(formData.email, newOtp, formData.name);
+      alert('✅ OTP sent to your email!');
+      setShowOtpDialog(true);
+      startCountdown();
+    } catch (error) {
+      console.error(error);
+      alert('Failed to send OTP. Try again.');
     } finally {
-      setIsLoading(false);
+      setIsSendingOtp(false);
     }
   };
 
+  const handleVerifyOtp = async () => {
+    setIsVerifying(true);
+
+    const storedOtp = sessionStorage.getItem('otp');
+    const expire = sessionStorage.getItem('otpExpire');
+
+    if (!storedOtp || !expire) {
+      alert('OTP expired or not found. Please resend.');
+      setIsVerifying(false);
+      return;
+    }
+
+    if (Date.now() > parseInt(expire)) {
+      alert('⏳ OTP expired! Please resend.');
+      setIsVerifying(false);
+      return;
+    }
+
+    if (otp === storedOtp) {
+      try {
+        // ✅ Gọi API lưu user vào DB
+        const res = await fetch(`${API_ENDPOINT}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullName: formData.name,
+            email: formData.email,
+            password: formData.password,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => null);
+          throw new Error(err?.message || 'Registration failed');
+        }
+
+        const data = await res.json();
+        const { token, fullName, avatarUrl, role } = data;
+
+
+
+        alert('🎉 Account created successfully! You can now log in.');
+        router.push('/auth/login');
+        sessionStorage.removeItem('otp');
+        sessionStorage.removeItem('otpExpire');
+      } catch (error: any) {
+        alert(error.message || 'Failed to register user.');
+      }
+    } else {
+      alert('❌ Incorrect OTP');
+    }
+
+    setIsVerifying(false);
+  };
+
+
+  // Gửi lại OTP
+  const handleResendOtp = async () => {
+    const newOtp = generateOTP();
+    setGeneratedOtp(newOtp);
+    sessionStorage.setItem('otp', newOtp);
+    sessionStorage.setItem('otpExpire', (Date.now() + 5 * 60 * 1000).toString());
+
+    try {
+      await sendOtpEmail(formData.email, newOtp, formData.name);
+      alert('📨 OTP resent successfully!');
+      startCountdown();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to resend OTP.');
+    }
+  };
+
+  // Hàm đếm ngược resend
+  const startCountdown = () => {
+    setCountdown(60);
+    setIsCounting(true);
+  };
+
+  // Giảm dần thời gian đếm
+  useEffect(() => {
+    if (!isCounting) return;
+    if (countdown === 0) {
+      setIsCounting(false);
+      return;
+    }
+
+    const timer = setTimeout(() => setCountdown((prev) => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [countdown, isCounting]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Link href="/" className="text-2xl font-bold text-primary">
-            MindMap Pro
-          </Link>
-          <ThemeToggle />
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary/20 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Create Account</CardTitle>
+          <CardDescription>Sign up with email verification</CardDescription>
+        </CardHeader>
 
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Create your account</CardTitle>
-            <CardDescription>
-              Get started with your free account today
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+        <CardContent>
+          <form onSubmit={handleSignup} className="space-y-4">
+            <div>
+              <Label>Full Name</Label>
+              <Input name="name" value={formData.name} onChange={handleChange} required />
+            </div>
+
+            <div>
+              <Label>Email</Label>
+              <Input name="email" type="email" value={formData.email} onChange={handleChange} required />
+            </div>
+
+            <div>
+              <Label>Password</Label>
+              <div className="relative">
                 <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter your full name"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={handleChange}
                   required
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+            <div>
+              <Label>Confirm Password</Label>
+              <div className="relative">
                 <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="Enter your email"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
                   required
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder="Create a password"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
+            <Button type="submit" className="w-full" disabled={isSendingOtp}>
+              {isSendingOtp ? 'Sending OTP...' : 'Create Account'}
+            </Button>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    placeholder="Confirm your password"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="terms"
-                  checked={acceptTerms}
-                  onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
-                />
-                <Label htmlFor="terms" className="text-sm">
-                  I agree to the{' '}
-                  <Link href="/terms" className="text-primary hover:underline">
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link href="/privacy" className="text-primary hover:underline">
-                    Privacy Policy
-                  </Link>
-                </Label>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading || !acceptTerms}
-              >
-                {isLoading ? 'Creating account...' : 'Create account'}
-              </Button>
-            </form>
-
-            <Separator />
-
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="text-center text-sm">
               Already have an account?{' '}
               <Link href="/auth/login" className="text-primary hover:underline">
                 Sign in
               </Link>
             </p>
-          </CardContent>
-        </Card>
-      </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* 🔐 OTP Dialog */}
+      <Dialog open={showOtpDialog} onOpenChange={setShowOtpDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Email Verification</DialogTitle>
+          </DialogHeader>
+
+          <p className="text-sm text-muted-foreground mb-3">
+            Enter the 6-digit code sent to <strong>{formData.email}</strong>.
+          </p>
+
+          <Input
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            placeholder="Enter OTP"
+            maxLength={6}
+            className="text-center tracking-widest text-lg"
+          />
+
+          <Button onClick={handleVerifyOtp} className="w-full mt-3" disabled={isVerifying}>
+            {isVerifying ? 'Verifying...' : 'Verify OTP'}
+          </Button>
+
+          {/* Resend section */}
+          <div className="text-center mt-3 text-sm text-muted-foreground flex flex-col items-center">
+            {isCounting ? (
+              <p className="flex items-center gap-1">
+                <TimerReset className="h-4 w-4" />
+                Resend OTP in {countdown}s
+              </p>
+            ) : (
+              <Button variant="link" onClick={handleResendOtp} className="text-primary">
+                Resend OTP
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

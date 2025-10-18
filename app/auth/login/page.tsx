@@ -17,13 +17,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+  const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:8080/api/v1';
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const res = await fetch('http://localhost:8080/api/v1/auth/login', {
+
+      const res = await fetch(`${API_ENDPOINT}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -56,7 +57,7 @@ export default function LoginPage() {
     try {
       const idToken = credentialResponse.credential;
       // Gửi idToken về backend
-      const res = await fetch('http://localhost:8080/api/v1/auth/google', {
+      const res = await fetch(`${API_ENDPOINT}/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken }),

@@ -1,4 +1,4 @@
-# 🌌 MindMap Pro - Cosmic Theme Edition
+# 🌌 ThinkFlow - Cosmic Theme Edition
 
 <div align="center">
 

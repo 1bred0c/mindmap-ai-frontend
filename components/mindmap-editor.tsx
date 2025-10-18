@@ -26,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Save, Download, Trash2 } from 'lucide-react';
+import { Plus, Save, Download, Trash2, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
 import CustomNode, { NodeShape } from '@/components/custom-node';
@@ -43,13 +43,17 @@ interface MindMapEditorProps {
   title?: string;
   mindMapId: number;
   viewOnly?: boolean;
+  showBackButton?: boolean;
+  onBack?: () => void;
 }
 
 export function MindMapEditor({
   title = 'Untitled Mind Map',
   mindMapId,
-  viewOnly = false,   // 👈 thêm default
-}: MindMapEditorProps & { viewOnly?: boolean }) {
+  viewOnly = false,
+  showBackButton = false,
+  onBack,
+}: MindMapEditorProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -488,7 +492,24 @@ export function MindMapEditor({
     <div className="h-full flex flex-col">
       {/* Toolbar */}
       <div className="border-b bg-background p-4 flex items-center justify-center relative">
+        {/* Back Button - Left Side */}
+        {showBackButton && (
+          <div className="absolute left-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onBack}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Mindmaps
+            </Button>
+          </div>
+        )}
+        
         <h1 className="text-xl font-semibold text-center">{title}</h1>
+        
+        {/* Action Buttons - Right Side */}
         <div className="absolute right-4 flex items-center gap-2">
           {!viewOnly && (
             <>
@@ -500,7 +521,6 @@ export function MindMapEditor({
               </Button>
             </>
           )}
-
         </div>
       </div>
 
@@ -537,7 +557,7 @@ export function MindMapEditor({
         >
           {editingEdgeId && labelPosition && (
             <input
-              className="absolute z-50 border border-gray-300 rounded px-2 py-1 text-sm bg-white shadow"
+              className="absolute z-50 border border-gray-300 rounded px-2 py-1 text-sm bg-white text-black shadow"
               style={{
                 top: labelPosition.y,
                 left: labelPosition.x,

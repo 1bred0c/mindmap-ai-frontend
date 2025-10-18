@@ -291,6 +291,8 @@ export default function NewMindMapPage() {
                 <MindMapEditor
                     mindMapId={createdMindmap.mindMapId}
                     title={createdMindmap.title}
+                    showBackButton={true}
+                    onBack={() => router.push('/mindmaps')}
                 />
             </div>
         );

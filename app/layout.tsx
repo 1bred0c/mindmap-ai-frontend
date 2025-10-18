@@ -22,7 +22,8 @@ export const metadata: Metadata = {
   title: 'ThinkFlow - AI-Powered Mind Mapping',
   description: 'Create, organize, and share your ideas with intelligent mind mapping tools',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/logo.png',
+    apple: '/logo.png',
   },
 };
 

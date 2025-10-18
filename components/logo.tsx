@@ -52,7 +52,7 @@ export function Logo({
         )}>
           <Image
             src="/logo.png"
-            alt="MindMap Pro Logo"
+            alt="ThinkFlow Logo"
             width={48}
             height={48}
             className={cn(
@@ -74,11 +74,11 @@ export function Logo({
           sizeClasses[size].text
         )}>
           {variant === 'compact' ? (
-            <span className="text-glow-purple">MMP</span>
+            <span className="text-glow-purple">TF</span>
           ) : (
             <>
-              <span className="text-glow-purple">MindMap</span>
-              <span className="text-cyan-400"> Pro</span>
+              <span className="text-glow-purple">Think</span>
+              <span className="text-cyan-400">Flow</span>
             </>
           )}
         </div>

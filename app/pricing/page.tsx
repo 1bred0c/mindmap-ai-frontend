@@ -23,17 +23,14 @@ import { supabase } from '@/lib/supabaseClient';
 const plans = [
   {
     name: 'Free',
-    price: '0',
+    currency: 'VND 0',
     description: 'Perfect for getting started',
-    limitations: [
-      'No AI features',
-    ],
-    current: true,
+
   },
   {
     name: 'Premium',
-    price: '59,000',
-    currency: 'VND',
+    price: '59.000',
+    currency: 'VND ',
     period: '/month',
     description: 'Everything you need for professional work',
     popular: true,
@@ -51,7 +48,7 @@ export default function PricingPage() {
     const checkSubscription = async () => {
       try {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const userId = user?.userid;
+        const userId = user?.userId;
         if (!userId) return;
 
         const today = new Date().toISOString().split('T')[0];
@@ -60,7 +57,6 @@ export default function PricingPage() {
           .from('subscriptions')
           .select('*')
           .eq('userid', userId)
-          .eq('status', 'active')
           .gte('enddate', today)
           .maybeSingle();
 
@@ -121,7 +117,7 @@ export default function PricingPage() {
                   <CardDescription>{plan.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="space-y-3">
+                  {/* <div className="space-y-3">
 
                     {plan.limitations && (
                       <>
@@ -137,13 +133,13 @@ export default function PricingPage() {
                         ))}
                       </>
                     )}
-                  </div>
+                  </div> */}
                   <div className="pt-4">
-                    {plan.current ? (
+                    {isCurrent ? ( // 🟢 CHANGED: so sánh currentPlan động
                       <Button variant="outline" className="w-full" disabled>
                         Current Plan
                       </Button>
-                    ) : (
+                    ) : (plan.name !== 'Free' && (
                       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
                         <DialogTrigger asChild>
                           <Button className="w-full">Upgrade to {plan.name}</Button>
@@ -181,7 +177,7 @@ export default function PricingPage() {
                           </div>
                         </DialogContent>
                       </Dialog>
-
+                    )
                     )}
                   </div>
                 </CardContent>

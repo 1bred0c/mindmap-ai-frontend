@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sparkles, Brain, Lightbulb, TrendingUp, Users, Target, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
@@ -77,6 +77,60 @@ export default function AIPage() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const router = useRouter();
+  const [canGenerate, setCanGenerate] = useState(false); // 🟢 có thể bấm nút tạo hay không
+  const [trialCount, setTrialCount] = useState(0);       // 🟢 số trial còn lại
+
+
+  useEffect(() => {
+    const checkUserAccess = async () => {
+      try {
+        const userData = localStorage.getItem('user');
+        const parsedUser = userData ? JSON.parse(userData) : null;
+        const userId = parsedUser?.userId;
+        if (!userId) return;
+
+        const today = new Date().toISOString().split('T')[0];
+
+        // 🔹 1️⃣ Kiểm tra Premium còn hạn
+        const { data: subData, error: subError } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('userid', userId)
+          .gte('enddate', today)
+          .maybeSingle();
+
+        if (subError) throw subError;
+
+        if (subData) {
+          // User đang có Premium còn hạn
+          setCanGenerate(true);
+          return;
+        }
+
+        // 🔹 2️⃣ Kiểm tra trial trong users
+        const { data: userRow, error: userError } = await supabase
+          .from('users')
+          .select('trial')
+          .eq('userid', userId)
+          .maybeSingle();
+
+        if (userError) throw userError;
+
+        if (userRow && userRow.trial > 0) {
+          setTrialCount(userRow.trial);
+          setCanGenerate(true);
+        } else {
+          setCanGenerate(false);
+        }
+      } catch (err) {
+        console.error('Error checking subscription/trial:', err);
+        setCanGenerate(false);
+      }
+    };
+
+    checkUserAccess();
+  }, []);
+
 
   const handleGenerate = async () => {
     if (!inputText.trim()) {
@@ -91,6 +145,18 @@ export default function AIPage() {
     setIsGenerating(true);
     setError(null);
     setGeneratedData(null);
+    // 🟢 Giảm trial nếu không có Premium
+    if (!canGenerate && trialCount > 0) {
+      const userData = localStorage.getItem('user');
+      const parsedUser = userData ? JSON.parse(userData) : null;
+      const userId = parsedUser?.userid;
+
+      if (userId) {
+        const newTrial = trialCount - 1;
+        await supabase.from('users').update({ trial: newTrial }).eq('userid', userId);
+        setTrialCount(newTrial);
+      }
+    }
 
     try {
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT;
@@ -221,28 +287,43 @@ export default function AIPage() {
               rows={4}
               className="resize-none"
             />
-            <div className="flex justify-between items-center">
-              <p className="text-sm text-muted-foreground">
-                {inputText.length} ký tự
-              </p>
-              <Button
-                onClick={handleGenerate}
-                disabled={!inputText.trim() || isGenerating}
-                size="lg"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Đang tạo... (có thể mất 5-15s)
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Tạo Mind Map
-                  </>
-                )}
-              </Button>
+            <div className="flex flex-col gap-2 justify-end items-end">
+              <div className="flex justify-between items-center w-full">
+                <p className="text-sm text-muted-foreground">
+                  {inputText.length} ký tự
+                </p>
+                <Button
+                  onClick={handleGenerate}
+                  disabled={!inputText.trim() || isGenerating || !canGenerate} // 🟢 ADD
+                  size="lg"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Đang tạo... (có thể mất 5-15s)
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Tạo Mind Map
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* 🟢 ADD: Thông báo lượt dùng thử */}
+              {!canGenerate && trialCount === 0 && (
+                <p className="text-sm text-destructive text-right">
+                  Bạn đã hết lượt dùng thử AI Mindmap.
+                </p>
+              )}
+              {trialCount > 0 && (
+                <p className="text-sm text-muted-foreground text-right">
+                  Lượt dùng thử còn lại: {trialCount}
+                </p>
+              )}
             </div>
+
           </CardContent>
         </Card>
 

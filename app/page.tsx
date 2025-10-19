@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Brain, Sparkles, Users, Zap } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Logo } from '@/components/logo';
+import { useTheme } from 'next-themes';
 
 const features = [
   {
@@ -33,22 +34,23 @@ const features = [
 
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
+  const { setTheme } = useTheme();
   // ✅ Kiểm tra token trong localStorage
   useEffect(() => {
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
-  }, []);
+    setTheme('dark');
+  }, [setTheme]);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Cosmic Grid Background */}
       <div className="absolute inset-0 cosmic-grid opacity-20" />
-      
+
       {/* Floating Orbs */}
       <div className="absolute top-20 left-10 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-pulse-glow" />
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse-glow animation-delay-2000" />
-      
+
       {/* ✅ Navigation */}
       <nav className="relative z-10 flex items-center justify-between p-6 max-w-7xl mx-auto backdrop-blur-sm">
         <Logo size="md" />
@@ -83,7 +85,7 @@ export default function HomePage() {
               ✨ AI-Powered Mind Mapping
             </span>
           </div>
-          
+
           <h1 className="text-6xl md:text-7xl font-bold font-display tracking-tight">
             Organize Your Ideas in a
             <br />
@@ -91,9 +93,9 @@ export default function HomePage() {
               Neural Universe
             </span>
           </h1>
-          
+
           <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
-            Transform your thoughts into beautiful, interconnected mind maps. 
+            Transform your thoughts into beautiful, interconnected mind maps.
             <br />
             Experience the <span className="text-cyan-400 font-semibold">power of connected intelligence</span>.
           </p>
@@ -126,8 +128,8 @@ export default function HomePage() {
         {/* ✅ Features Grid */}
         <div className="relative mt-32 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => (
-            <Card 
-              key={index} 
+            <Card
+              key={index}
               className="group relative overflow-hidden node-glow"
             >
               <CardHeader>
@@ -141,7 +143,7 @@ export default function HomePage() {
                   {feature.description}
                 </CardDescription>
               </CardContent>
-              
+
               {/* Neural connection line */}
               <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </Card>
@@ -153,7 +155,7 @@ export default function HomePage() {
           <Card className="max-w-2xl mx-auto relative overflow-hidden">
             {/* Glow effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-cyan-500/10 to-emerald-500/10 blur-xl" />
-            
+
             <CardHeader className="relative z-10">
               <CardTitle className="text-3xl font-display mb-2">
                 Ready to Enter the Neural Universe?

@@ -15,50 +15,65 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { UploadReceipt } from '@/components/UploadReceipt'
+import { supabase } from '@/lib/supabaseClient';
 
 
 const plans = [
   {
     name: 'Free',
-    price: '0',
+    currency: 'VND 0',
     description: 'Perfect for getting started',
-    features: [
-      'Up to 3 workspaces',
-      'Up to 10 mind maps',
-    ],
-    limitations: [
-      'No AI features',
-    ],
-    current: true,
+
   },
   {
     name: 'Premium',
-    price: '59,000',
-    currency: 'VND',
+    price: '59.000',
+    currency: 'VND ',
     period: '/month',
     description: 'Everything you need for professional work',
-    features: [
-      'Unlimited workspaces',
-      'Unlimited mind maps',
-      'AI-powered generation',
-    ],
     popular: true,
   },
 ];
 
 export default function PricingPage() {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setReceiptFile(e.target.files[0]);
-    }
-  };
+  // 🟢 ADD: lưu trạng thái gói hiện tại
+  const [currentPlan, setCurrentPlan] = useState<'Free' | 'Premium'>('Free');
 
+  // 🟢 ADD: kiểm tra DB subscriptions
+  useEffect(() => {
+    const checkSubscription = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const userId = user?.userId;
+        if (!userId) return;
 
+        const today = new Date().toISOString().split('T')[0];
+
+        const { data, error } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('userid', userId)
+          .gte('enddate', today)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data) {
+          setCurrentPlan('Premium');
+        } else {
+          setCurrentPlan('Free');
+        }
+      } catch (err) {
+        console.error('Error checking subscription:', err);
+      }
+    };
+
+    checkSubscription();
+  }, []);
 
 
   return (
@@ -74,101 +89,101 @@ export default function PricingPage() {
 
         {/* Pricing Cards */}
         <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {plans.map((plan, index) => (
-            <Card
-              key={index}
-              className={`relative ${plan.popular ? 'border-primary shadow-lg' : ''}`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-primary text-primary-foreground">
-                    <Star className="h-3 w-3 mr-1" />
-                    Most Popular
-                  </Badge>
-                </div>
-              )}
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                <div className="flex items-baseline justify-center space-x-1">
-                  <span className="text-4xl font-bold">
-                    {plan.currency ? plan.currency : '$'}{plan.price}
-                  </span>
-                  {plan.period && <span className="text-muted-foreground">{plan.period}</span>}
-                </div>
-                <CardDescription>{plan.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-3">
-                  {plan.features.map((feature, featureIndex) => (
-                    <div key={featureIndex} className="flex items-center space-x-3">
-                      <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      <span className="text-sm">{feature}</span>
-                    </div>
-                  ))}
-                  {plan.limitations && (
-                    <>
-                      <hr className="my-4" />
-                      <p className="text-xs text-muted-foreground font-medium">Limitations:</p>
-                      {plan.limitations.map((limitation, limitIndex) => (
-                        <div key={limitIndex} className="flex items-center space-x-3">
-                          <div className="w-4 h-4 flex items-center justify-center">
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full" />
+          {plans.map((plan, index) => {
+            // thêm logic kiểm tra isCurrent
+            const isCurrent = currentPlan === plan.name;
+
+            return (
+              <Card
+                key={index}
+                className={`relative ${plan.popular ? 'border-primary shadow-lg' : ''}`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-primary text-primary-foreground">
+                      <Star className="h-3 w-3 mr-1" />
+                      Most Popular
+                    </Badge>
+                  </div>
+                )}
+                <CardHeader className="text-center">
+                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                  <div className="flex items-baseline justify-center space-x-1">
+                    <span className="text-4xl font-bold">
+                      {plan.currency ? plan.currency : '$'}{plan.price}
+                    </span>
+                    {plan.period && <span className="text-muted-foreground">{plan.period}</span>}
+                  </div>
+                  <CardDescription>{plan.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* <div className="space-y-3">
+
+                    {plan.limitations && (
+                      <>
+                        <hr className="my-4" />
+                        <p className="text-xs text-muted-foreground font-medium">Limitations:</p>
+                        {plan.limitations.map((limitation, limitIndex) => (
+                          <div key={limitIndex} className="flex items-center space-x-3">
+                            <div className="w-4 h-4 flex items-center justify-center">
+                              <div className="w-2 h-2 bg-muted-foreground rounded-full" />
+                            </div>
+                            <span className="text-sm text-muted-foreground">{limitation}</span>
                           </div>
-                          <span className="text-sm text-muted-foreground">{limitation}</span>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </div>
-                <div className="pt-4">
-                  {plan.current ? (
-                    <Button variant="outline" className="w-full" disabled>
-                      Current Plan
-                    </Button>
-                  ) : (
-                    <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-                      <DialogTrigger asChild>
-                        <Button className="w-full">Upgrade to {plan.name}</Button>
-                      </DialogTrigger>
+                        ))}
+                      </>
+                    )}
+                  </div> */}
+                  <div className="pt-4">
+                    {isCurrent ? ( // 🟢 CHANGED: so sánh currentPlan động
+                      <Button variant="outline" className="w-full" disabled>
+                        Current Plan
+                      </Button>
+                    ) : (plan.name !== 'Free' && (
+                      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+                        <DialogTrigger asChild>
+                          <Button className="w-full">Upgrade to {plan.name}</Button>
+                        </DialogTrigger>
 
-                      <DialogContent className="max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>Payment Information</DialogTitle>
-                          <DialogDescription>
-                            Pay via MoMo and upload your receipt for verification.
-                          </DialogDescription>
-                        </DialogHeader>
+                        <DialogContent className="max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Payment Information</DialogTitle>
+                            <DialogDescription>
+                              Pay via MoMo and upload your receipt for verification.
+                            </DialogDescription>
+                          </DialogHeader>
 
-                        <div className="space-y-4">
-                          {/* QR Momo */}
-                          <div className="text-center space-y-3">
-                            <p className="font-medium">Scan QR code to pay via MoMo</p>
+                          <div className="space-y-4">
+                            {/* QR Momo */}
+                            <div className="text-center space-y-3">
+                              <p className="font-medium">Scan QR code to pay via MoMo</p>
 
-                            <div className="mx-auto w-48 h-48 rounded-lg overflow-hidden border">
-                              <img
-                                src="/momo-qr.jpg" // đường dẫn ảnh QR của bạn (ví dụ lưu trong /public)
-                                alt="MoMo QR Code"
-                                className="w-full h-full object-cover"
-                              />
+                              <div className="mx-auto w-48 h-48 rounded-lg overflow-hidden border">
+                                <img
+                                  src="/momo-qr.jpg" // đường dẫn ảnh QR của bạn (ví dụ lưu trong /public)
+                                  alt="MoMo QR Code"
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+
+                              <p className="text-sm text-muted-foreground">Amount: {plan.price} VND</p>
                             </div>
 
-                            <p className="text-sm text-muted-foreground">Amount: {plan.price} VND</p>
+                            {/* Gọi component upload */}
+                            <UploadReceipt
+                              onSuccess={() => console.log('Upload thành công!')}
+                              onClose={() => setShowPaymentDialog(false)}
+                            />
                           </div>
-
-                          {/* Gọi component upload */}
-                          <UploadReceipt
-                            onSuccess={() => console.log('Upload thành công!')}
-                            onClose={() => setShowPaymentDialog(false)}
-                          />
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                        </DialogContent>
+                      </Dialog>
+                    )
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* FAQ Section */}

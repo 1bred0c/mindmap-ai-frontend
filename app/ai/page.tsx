@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sparkles, Brain, Lightbulb, TrendingUp, Users, Target, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
@@ -77,6 +77,60 @@ export default function AIPage() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const router = useRouter();
+  const [canGenerate, setCanGenerate] = useState(false); // 🟢 có thể bấm nút tạo hay không
+  const [trialCount, setTrialCount] = useState(0);       // 🟢 số trial còn lại
+
+
+  useEffect(() => {
+    const checkUserAccess = async () => {
+      try {
+        const userData = localStorage.getItem('user');
+        const parsedUser = userData ? JSON.parse(userData) : null;
+        const userId = parsedUser?.userId;
+        if (!userId) return;
+
+        const today = new Date().toISOString().split('T')[0];
+
+        // 🔹 1️⃣ Kiểm tra Premium còn hạn
+        const { data: subData, error: subError } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('userid', userId)
+          .gte('enddate', today)
+          .maybeSingle();
+
+        if (subError) throw subError;
+
+        if (subData) {
+          // User đang có Premium còn hạn
+          setCanGenerate(true);
+          return;
+        }
+
+        // 🔹 2️⃣ Kiểm tra trial trong users
+        const { data: userRow, error: userError } = await supabase
+          .from('users')
+          .select('trial')
+          .eq('userid', userId)
+          .maybeSingle();
+
+        if (userError) throw userError;
+
+        if (userRow && userRow.trial > 0) {
+          setTrialCount(userRow.trial);
+          setCanGenerate(true);
+        } else {
+          setCanGenerate(false);
+        }
+      } catch (err) {
+        console.error('Error checking subscription/trial:', err);
+        setCanGenerate(false);
+      }
+    };
+
+    checkUserAccess();
+  }, []);
+
 
   const handleGenerate = async () => {
     if (!inputText.trim()) {
@@ -87,20 +141,34 @@ export default function AIPage() {
       });
       return;
     }
-    
+
     setIsGenerating(true);
     setError(null);
     setGeneratedData(null);
+    // 🟢 Giảm trial nếu không có Premium
+    if (!canGenerate && trialCount > 0) {
+      const userData = localStorage.getItem('user');
+      const parsedUser = userData ? JSON.parse(userData) : null;
+      const userId = parsedUser?.userid;
+
+      if (userId) {
+        const newTrial = trialCount - 1;
+        await supabase.from('users').update({ trial: newTrial }).eq('userid', userId);
+        setTrialCount(newTrial);
+      }
+    }
 
     try {
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT ;
-      
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT;
+      const userData = localStorage.getItem('user');
+      const parsedUser = userData ? JSON.parse(userData) : null;
+      const userId = parsedUser?.userId ?? 1;
       const response = await fetch(`${API_BASE_URL}/ai/generate-mindmap`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           // Add X-User-Id if available from auth context
-          // 'X-User-Id': userId,
+          'X-User-Id': userId,
         },
         body: JSON.stringify({
           prompt: inputText,
@@ -117,7 +185,7 @@ export default function AIPage() {
       console.log('📊 Nodes count:', data.nodes?.length);
       console.log('🔗 Edges count:', data.edges?.length);
       setGeneratedData(data);
-      
+
       toast({
         title: "Thành công!",
         description: "Đã tạo cấu trúc mindmap thành công",
@@ -141,7 +209,7 @@ export default function AIPage() {
 
   const createMindMap = () => {
     if (!generatedData) return;
-    
+
     // Lưu dữ liệu AI vào sessionStorage để sử dụng sau khi tạo mindmap
     sessionStorage.setItem('aiGeneratedMindmap', JSON.stringify({
       title: generatedData.title,
@@ -149,12 +217,12 @@ export default function AIPage() {
       edges: generatedData.edges,
       prompt: inputText
     }));
-    
+
     toast({
       title: "Đang chuyển hướng...",
       description: "Chuyển đến trang tạo mindmap",
     });
-    
+
     // Chuyển đến trang tạo mindmap mới với flag từ AI
     router.push('/mindmaps/new?from=ai');
   };
@@ -211,7 +279,7 @@ export default function AIPage() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <Textarea
               placeholder="Ví dụ: Tạo mind map cho kế hoạch chiến dịch marketing cho một ứng dụng di động mới, bao gồm phân tích đối tượng mục tiêu, các kênh marketing, phân bổ ngân sách và các chỉ số thành công..."
               value={inputText}
@@ -219,28 +287,43 @@ export default function AIPage() {
               rows={4}
               className="resize-none"
             />
-            <div className="flex justify-between items-center">
-              <p className="text-sm text-muted-foreground">
-                {inputText.length} ký tự
-              </p>
-              <Button 
-                onClick={handleGenerate} 
-                disabled={!inputText.trim() || isGenerating}
-                size="lg"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Đang tạo... (có thể mất 5-15s)
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Tạo Mind Map
-                  </>
-                )}
-              </Button>
+            <div className="flex flex-col gap-2 justify-end items-end">
+              <div className="flex justify-between items-center w-full">
+                <p className="text-sm text-muted-foreground">
+                  {inputText.length} ký tự
+                </p>
+                <Button
+                  onClick={handleGenerate}
+                  disabled={!inputText.trim() || isGenerating || !canGenerate} // 🟢 ADD
+                  size="lg"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Đang tạo... (có thể mất 5-15s)
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Tạo Mind Map
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* 🟢 ADD: Thông báo lượt dùng thử */}
+              {!canGenerate && trialCount === 0 && (
+                <p className="text-sm text-destructive text-right">
+                  Bạn đã hết lượt dùng thử AI Mindmap.
+                </p>
+              )}
+              {trialCount > 0 && (
+                <p className="text-sm text-muted-foreground text-right">
+                  Lượt dùng thử còn lại: {trialCount}
+                </p>
+              )}
             </div>
+
           </CardContent>
         </Card>
 
@@ -287,8 +370,8 @@ export default function AIPage() {
             <h2 className="text-xl font-semibold mb-4">Mẫu bắt đầu nhanh</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {aiSuggestions.map((suggestion) => (
-                <Card 
-                  key={suggestion.id} 
+                <Card
+                  key={suggestion.id}
                   className="cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => handleUseSuggestion(suggestion)}
                 >
@@ -336,11 +419,11 @@ export default function AIPage() {
                 <h4 className="font-semibold text-sm">Các Node ({generatedData.nodes.length})</h4>
                 <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
                   {generatedData.nodes.map((node, index) => (
-                    <div 
+                    <div
                       key={index}
                       className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                     >
-                      <div 
+                      <div
                         className="w-6 h-6 rounded flex-shrink-0 flex items-center justify-center text-[10px] font-semibold text-white"
                         style={{ backgroundColor: node.color }}
                       >
@@ -373,7 +456,7 @@ export default function AIPage() {
                   <h4 className="font-semibold text-sm">Các kết nối ({generatedData.edges.length})</h4>
                   <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
                     {generatedData.edges.map((edge, index) => (
-                      <div 
+                      <div
                         key={index}
                         className="flex items-center space-x-2 p-2 rounded-lg border bg-card text-sm"
                       >
@@ -394,8 +477,8 @@ export default function AIPage() {
 
               {/* Action Buttons */}
               <div className="flex justify-end space-x-2 pt-4 border-t">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={handleRegenerateNew}
                 >
                   Tạo mới

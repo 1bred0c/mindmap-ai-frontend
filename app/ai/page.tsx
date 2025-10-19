@@ -94,13 +94,15 @@ export default function AIPage() {
 
     try {
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT;
-
+      const userData = localStorage.getItem('user');
+      const parsedUser = userData ? JSON.parse(userData) : null;
+      const userId = parsedUser?.userId ?? 1;
       const response = await fetch(`${API_BASE_URL}/ai/generate-mindmap`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           // Add X-User-Id if available from auth context
-          // 'X-User-Id': userId,
+          'X-User-Id': userId,
         },
         body: JSON.stringify({
           prompt: inputText,

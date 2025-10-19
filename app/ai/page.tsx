@@ -149,7 +149,7 @@ export default function AIPage() {
     if (!canGenerate && trialCount > 0) {
       const userData = localStorage.getItem('user');
       const parsedUser = userData ? JSON.parse(userData) : null;
-      const userId = parsedUser?.userid;
+      const userId = parsedUser?.userId;
 
       if (userId) {
         const newTrial = trialCount - 1;

@@ -45,8 +45,12 @@ export default function LoginPage() {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify({ userId, fullName, avatarUrl, role }));
 
-      // ✅ Chuyển hướng sau khi login thành công
-      router.push('/dashboard');
+      // ✅ Chuyển hướng sau khi login thành công (role-based)
+      if (role === 'ADMIN') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err: any) {
       alert(err.message || 'Login failed');
     } finally {
@@ -87,9 +91,9 @@ export default function LoginPage() {
       {/* Cosmic Background */}
       <div className="absolute inset-0 cosmic-grid opacity-20" />
       <div className="absolute top-20 left-10 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-pulse-glow" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse-glow" 
-           style={{ animationDelay: '2s' }} />
-      
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse-glow"
+        style={{ animationDelay: '2s' }} />
+
       <div className="relative z-10 w-full max-w-md px-4 space-y-6">
         {/* Header with Logo */}
         <div className="flex items-center justify-center mb-4">

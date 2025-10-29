@@ -56,9 +56,10 @@ export async function POST(request: NextRequest) {
         // 📝 Tạo orderCode unique (timestamp + random)
         const orderCode = Number(Date.now().toString().slice(-9) + Math.floor(Math.random() * 1000));
 
-        // 🔗 URL callback (PayOS sẽ redirect về đây)
-        const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL}/payment/result?status=success&orderCode=${orderCode}`;
-        const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL}/payment/result?status=cancelled&orderCode=${orderCode}`;
+        // 🔗 URL callback - PayOS sẽ redirect về đây sau khi thanh toán
+        // PayOS không tự thêm status vào URL, chỉ redirect về URL này
+        const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL}/payment/result?orderCode=${orderCode}`;
+        const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL}/payment/result?orderCode=${orderCode}`;
 
         // 📦 Payload gửi đến PayOS
         const paymentData = {
@@ -97,6 +98,8 @@ export async function POST(request: NextRequest) {
             amount,
             userId,
         });
+        console.log("🔗 returnUrl:", returnUrl);
+
 
         const response = await fetch(PAYOS_API_URL, {
             method: 'POST',

@@ -1,0 +1,357 @@
+'use client';
+
+import { DashboardLayout } from '@/components/layout/dashboard-layout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Star, CreditCard, Loader2, CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { useToast } from '@/hooks/use-toast';
+
+
+const plans = [
+  {
+    name: 'Free',
+    currency: 'VND 0',
+    description: 'Perfect for getting started',
+
+  },
+  {
+    name: 'Premium',
+    price: '59.000',
+    currency: 'VND ',
+    period: '/month',
+    description: 'Everything you need for professional work',
+    popular: true,
+  },
+];
+
+// 🎯 Payment State Type
+type PaymentState = 'idle' | 'processing' | 'success' | 'failed';
+
+export default function PricingPage() {
+  const [currentPlan, setCurrentPlan] = useState<'Free' | 'Premium'>('Free');
+  const [paymentState, setPaymentState] = useState<PaymentState>('idle');
+  const [checkoutUrl, setCheckoutUrl] = useState<string>('');
+  const [orderCode, setOrderCode] = useState<number>(0);
+  const [currentUserId, setCurrentUserId] = useState<number>(0);
+
+  const { toast } = useToast();
+
+  // ✅ Kiểm tra subscription hiện tại
+  const checkSubscription = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = user?.userId;
+      if (!userId) return;
+
+      setCurrentUserId(userId);
+
+      const today = new Date().toISOString().split('T')[0];
+
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('userid', userId)
+        .gte('enddate', today)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setCurrentPlan('Premium');
+      } else {
+        setCurrentPlan('Free');
+      }
+    } catch (err) {
+      console.error('Error checking subscription:', err);
+    }
+  };
+
+  useEffect(() => {
+    checkSubscription();
+  }, []);
+
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('userid', userId)
+        .gte('enddate', today)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setCurrentPlan('Premium');
+      } else {
+        setCurrentPlan('Free');
+      }
+    } catch (err) {
+      console.error('Error checking subscription:', err);
+    }
+  };
+
+  useEffect(() => {
+    checkSubscription();
+  }, []);
+
+  // 💳 Xử lý thanh toán qua PayOS
+  const handlePayOSPayment = async (planName: string, amount: number) => {
+    try {
+      setIsProcessing(true);
+
+      // Lấy thông tin user
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = user?.userId;
+      const userEmail = user?.email || '';
+      const userName = user?.name || user?.username || '';
+
+      if (!userId) {
+        toast({
+          title: 'Lỗi',
+          description: 'Vui lòng đăng nhập để tiếp tục',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // ⏳ Tạo payment
+      toast({
+        title: 'Đang tạo thanh toán...',
+        description: 'Vui lòng đợi trong giây lát',
+      });
+
+      const paymentResult = await createPayment({
+        userId,
+        planName,
+        amount,
+        userEmail,
+        userName,
+      });
+
+      if (!paymentResult) {
+        throw new Error('Không thể tạo thanh toán');
+      }
+
+      // 🚀 Mở popup thanh toán
+      toast({
+        title: 'Mở cửa sổ thanh toán',
+        description: 'Vui lòng hoàn tất thanh toán trong cửa sổ mới',
+      });
+
+      const popup = openPaymentPopup(paymentResult.checkoutUrl);
+
+      // 🔄 Polling kiểm tra trạng thái (client-side)
+      toast({
+        title: 'Đang chờ thanh toán...',
+        description: 'Hệ thống sẽ tự động cập nhật khi bạn thanh toán xong',
+        duration: 10000,
+      });
+
+      const isPaid = await pollPaymentStatus(paymentResult.orderCode);
+
+      // 🔒 Đóng popup PayOS
+      if (popup && !popup.closed) {
+        popup.close();
+      }
+
+      if (isPaid) {
+        // ✅ Hiển thị modal thành công ngay trên trang
+        setShowSuccessDialog(true);
+
+        // Refresh subscription status
+        await checkSubscription();
+      } else {
+        toast({
+          title: 'Chưa nhận được xác nhận',
+          description: 'Vui lòng kiểm tra lại sau hoặc liên hệ hỗ trợ',
+          variant: 'destructive',
+        });
+      }
+
+    } catch (err: any) {
+      console.error('❌ Payment error:', err);
+      toast({
+        title: 'Lỗi thanh toán',
+        description: err.message || 'Đã có lỗi xảy ra, vui lòng thử lại',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+
+  return (
+    <DashboardLayout>
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold">Pricing Plans</h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Choose the perfect plan for your mind mapping needs. Upgrade anytime to unlock more features.
+          </p>
+        </div>
+
+        {/* Pricing Cards */}
+        <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {plans.map((plan, index) => {
+            // thêm logic kiểm tra isCurrent
+            const isCurrent = currentPlan === plan.name;
+
+            return (
+              <Card
+                key={index}
+                className={`relative ${plan.popular ? 'border-primary shadow-lg' : ''}`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-primary text-primary-foreground">
+                      <Star className="h-3 w-3 mr-1" />
+                      Most Popular
+                    </Badge>
+                  </div>
+                )}
+                <CardHeader className="text-center">
+                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                  <div className="flex items-baseline justify-center space-x-1">
+                    <span className="text-4xl font-bold">
+                      {plan.currency ? plan.currency : '$'}{plan.price}
+                    </span>
+                    {plan.period && <span className="text-muted-foreground">{plan.period}</span>}
+                  </div>
+                  <CardDescription>{plan.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* <div className="space-y-3">
+
+                    {plan.limitations && (
+                      <>
+                        <hr className="my-4" />
+                        <p className="text-xs text-muted-foreground font-medium">Limitations:</p>
+                        {plan.limitations.map((limitation, limitIndex) => (
+                          <div key={limitIndex} className="flex items-center space-x-3">
+                            <div className="w-4 h-4 flex items-center justify-center">
+                              <div className="w-2 h-2 bg-muted-foreground rounded-full" />
+                            </div>
+                            <span className="text-sm text-muted-foreground">{limitation}</span>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div> */}
+                  <div className="pt-4">
+                    {isCurrent ? (
+                      <Button variant="outline" className="w-full" disabled>
+                        Current Plan
+                      </Button>
+                    ) : (plan.name !== 'Free' && plan.price && (
+                      <Button
+                        className="w-full"
+                        onClick={() => handlePayOSPayment(plan.name, parseInt(plan.price!.replace(/\./g, '')))}
+                        disabled={isLoading || isProcessing}
+                      >
+                        {isLoading || isProcessing ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Đang xử lý...
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            Thanh toán qua PayOS
+                          </>
+                        )}
+                      </Button>
+                    )
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* FAQ Section */}
+        <div className="max-w-2xl mx-auto text-center space-y-4">
+          <h2 className="text-2xl font-bold">Frequently Asked Questions</h2>
+          <div className="grid gap-4 text-left">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">How does the payment process work?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Simply scan the MoMo QR code to make your payment, then upload a screenshot
+                  or photo of your payment receipt. Our team will verify your payment within 24 hours.
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Can I cancel my subscription anytime?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Yes, you can cancel your subscription at any time. Your premium features will
+                  remain active until the end of your current billing period.
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">What happens to my data if I downgrade?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Your data is always safe. If you exceed the limits of your new plan,
+                  you'll need to delete some content or upgrade again to access everything.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* 🎉 Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="relative">
+                <CheckCircle2 className="h-16 w-16 text-green-500 animate-bounce" />
+                <div className="absolute inset-0 h-16 w-16 bg-green-500/20 rounded-full animate-ping" />
+              </div>
+            </div>
+            <DialogTitle className="text-center text-2xl text-green-600 dark:text-green-400">
+              🎉 Thanh toán thành công!
+            </DialogTitle>
+            <DialogDescription className="text-center text-base">
+              Bạn đã nâng cấp lên gói Premium thành công!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4 space-y-2">
+              <p className="text-sm font-semibold text-green-900 dark:text-green-100">
+                ✓ Gói Premium đã được kích hoạt
+              </p>
+              <p className="text-xs text-green-700 dark:text-green-300">
+                Bạn có thể sử dụng tất cả tính năng Premium ngay bây giờ!
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                setShowSuccessDialog(false);
+                checkSubscription(); // Refresh lại status
+              }}
+              className="w-full"
+            >
+              Đóng
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </DashboardLayout>
+  );
+}

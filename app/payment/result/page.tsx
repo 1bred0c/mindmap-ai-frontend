@@ -17,54 +17,171 @@ function PaymentResultContent() {
     useEffect(() => {
         const checkPaymentStatus = async () => {
             try {
-                // Lấy thông tin từ URL
-                const paymentStatus = searchParams?.get('status') || searchParams?.get('payment');
+                // Lấy thông tin từ URL - PayOS chỉ có orderCode, không có status
                 const code = searchParams?.get('orderCode') || searchParams?.get('code');
+                console.log("🔍 URL params - orderCode:", code);
 
                 if (code) {
                     setOrderCode(code);
                 }
 
-                // Kiểm tra payment trong DB
                 const user = JSON.parse(localStorage.getItem('user') || '{}');
                 const userId = user?.userId;
 
-                if (userId && code) {
-                    // Tìm payment từ payment_logs
-                    const { data: paymentLog } = await supabase
-                        .from('payment_logs')
-                        .select('*, payments:paymentid(*)')
-                        .eq('ordercode', parseInt(code))
-                        .eq('userid', userId)
-                        .maybeSingle();
+                if (!userId) {
+                    setStatus('failed');
+                    setMessage('Vui lòng đăng nhập để xem kết quả thanh toán');
+                    return;
+                }
 
-                    if (paymentLog) {
-                        // Kiểm tra trạng thái trong bảng payments
-                        if (paymentLog.status === 'PAID' && paymentLog.payments?.status === 'verified') {
+                if (!code) {
+                    setStatus('failed');
+                    setMessage('Không tìm thấy mã đơn hàng');
+                    return;
+                }
+
+                console.log('🔄 Checking payment status from PayOS API...');
+
+                // Gọi API check-payment để lấy trạng thái thật từ PayOS
+                try {
+                    const response = await fetch('/api/check-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderCode: parseInt(code), userId }),
+                    });
+
+                    const result = await response.json();
+                    console.log('📦 PayOS status:', result);
+
+                    // Nếu thanh toán thành công từ PayOS
+                    if (result.success && result.status === 'PAID') {
+                        try {
+                            // 1️⃣ Tìm paymentId từ payment_logs
+                            const { data: logData, error: logError } = await supabase
+                                .from('payment_logs')
+                                .select('paymentid, userid')
+                                .eq('ordercode', parseInt(code))
+                                .eq('userid', userId)
+                                .maybeSingle();
+
+                            if (logError || !logData) {
+                                console.error('❌ Payment log not found:', logError);
+                                setStatus('failed');
+                                setMessage('Không tìm thấy thông tin thanh toán');
+                                return;
+                            }
+
+                            const paymentId = logData.paymentid;
+
+                            // 2️⃣ Update payments table → status = 'verified'
+                            const { error: paymentError } = await supabase
+                                .from('payments')
+                                .update({
+                                    status: 'verified',
+                                    paidat: new Date().toISOString(),
+                                })
+                                .eq('paymentid', paymentId);
+
+                            if (paymentError) {
+                                console.error('❌ Failed to update payment:', paymentError);
+                                throw paymentError;
+                            }
+
+                            console.log('✅ Payment updated to verified');
+
+                            // 3️⃣ Tạo hoặc cập nhật subscription
+                            const today = new Date().toISOString().split('T')[0];
+                            const endDate = new Date();
+                            endDate.setMonth(endDate.getMonth() + 1);
+                            const endDateStr = endDate.toISOString().split('T')[0];
+
+                            // Kiểm tra subscription hiện tại
+                            const { data: existingSub } = await supabase
+                                .from('subscriptions')
+                                .select('*')
+                                .eq('userid', userId)
+                                .maybeSingle();
+
+                            let subscriptionId;
+
+                            if (existingSub) {
+                                // Gia hạn subscription hiện tại
+                                const currentEnd = new Date(existingSub.enddate);
+                                const newEnd = new Date(currentEnd);
+                                newEnd.setMonth(newEnd.getMonth() + 1);
+
+                                const { data: updatedSub, error: subError } = await supabase
+                                    .from('subscriptions')
+                                    .update({
+                                        enddate: newEnd.toISOString().split('T')[0],
+                                        status: 'active',
+                                    })
+                                    .eq('subscriptionid', existingSub.subscriptionid)
+                                    .select()
+                                    .single();
+
+                                if (subError) throw subError;
+                                subscriptionId = updatedSub.subscriptionid;
+                                console.log('✅ Subscription extended to:', newEnd.toISOString().split('T')[0]);
+                            } else {
+                                // Tạo subscription mới
+                                const { data: newSub, error: subError } = await supabase
+                                    .from('subscriptions')
+                                    .insert({
+                                        userid: userId,
+                                        startdate: today,
+                                        enddate: endDateStr,
+                                        status: 'active',
+                                    })
+                                    .select()
+                                    .single();
+
+                                if (subError) throw subError;
+                                subscriptionId = newSub.subscriptionid;
+                                console.log('✅ New subscription created, ends:', endDateStr);
+                            }
+
+                            // 4️⃣ Link payment với subscription
+                            await supabase
+                                .from('payments')
+                                .update({ subscriptionid: subscriptionId })
+                                .eq('paymentid', paymentId);
+
+                            // 5️⃣ Update payment_logs
+                            await supabase
+                                .from('payment_logs')
+                                .update({ status: 'PAID' })
+                                .eq('ordercode', parseInt(code));
+
+                            console.log('🎉 Payment and subscription updated successfully!');
+
+                            // Hiển thị thành công
                             setStatus('success');
                             setMessage('Bạn đã nâng cấp lên Premium thành công!');
-                            return;
-                        } else if (paymentLog.status === 'CANCELLED') {
+
+                        } catch (err: any) {
+                            console.error('❌ Error updating payment:', err);
                             setStatus('failed');
-                            setMessage('Bạn đã hủy thanh toán.');
-                            return;
+                            setMessage('Có lỗi khi cập nhật thanh toán: ' + err.message);
                         }
+                    } else if (result.status === 'CANCELLED') {
+                        // Nếu hủy thanh toán
+                        setStatus('failed');
+                        setMessage('Bạn đã hủy thanh toán.');
+                    } else {
+                        // Chưa thanh toán hoặc trạng thái khác
+                        setStatus('failed');
+                        setMessage(`Thanh toán chưa hoàn tất. Trạng thái: ${result.status || 'PENDING'}`);
                     }
+
+                } catch (apiError: any) {
+                    console.error('❌ Error calling check-payment API:', apiError);
+                    setStatus('failed');
+                    setMessage('Không thể kiểm tra trạng thái thanh toán');
                 }
 
-                // Fallback: check bằng payment status param
-                if (paymentStatus === 'success' || paymentStatus === 'PAID') {
-                    setStatus('success');
-                    setMessage('Thanh toán thành công! Đang xử lý đơn hàng...');
-                } else if (paymentStatus === 'cancelled' || paymentStatus === 'CANCELLED') {
-                    setStatus('failed');
-                    setMessage('Bạn đã hủy thanh toán.');
-                } else {
-                    setStatus('failed');
-                    setMessage('Thanh toán thất bại hoặc chưa hoàn tất.');
-                }
             } catch (error) {
-                console.error('Error checking payment:', error);
+                console.error('Error in checkPaymentStatus:', error);
                 setStatus('failed');
                 setMessage('Có lỗi xảy ra khi kiểm tra thanh toán.');
             }

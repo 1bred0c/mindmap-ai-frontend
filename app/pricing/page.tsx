@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star, Upload } from 'lucide-react';
+import { Check, Star, CreditCard, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,11 +13,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useEffect, useState } from 'react';
-import { UploadReceipt } from '@/components/UploadReceipt'
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { usePayOSPayment } from '@/hooks/use-payos-payment';
 import { supabase } from '@/lib/supabaseClient';
+import { useToast } from '@/hooks/use-toast';
 
 
 const plans = [
@@ -37,43 +37,144 @@ const plans = [
   },
 ];
 
-export default function PricingPage() {
+function PricingContent() {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-
-  // 🟢 ADD: lưu trạng thái gói hiện tại
   const [currentPlan, setCurrentPlan] = useState<'Free' | 'Premium'>('Free');
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // 🟢 ADD: kiểm tra DB subscriptions
-  useEffect(() => {
-    const checkSubscription = async () => {
-      try {
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const userId = user?.userId;
-        if (!userId) return;
+  const searchParams = useSearchParams();
+  const { createPayment, openPaymentPopup, pollPaymentStatus, isLoading, error } = usePayOSPayment();
+  const { toast } = useToast();
 
-        const today = new Date().toISOString().split('T')[0];
+  // ✅ Kiểm tra subscription từ DB
+  const checkSubscription = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = user?.userId;
+      if (!userId) return;
 
-        const { data, error } = await supabase
-          .from('subscriptions')
-          .select('*')
-          .eq('userid', userId)
-          .gte('enddate', today)
-          .maybeSingle();
+      const today = new Date().toISOString().split('T')[0];
 
-        if (error) throw error;
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('userid', userId)
+        .gte('enddate', today)
+        .maybeSingle();
 
-        if (data) {
-          setCurrentPlan('Premium');
-        } else {
-          setCurrentPlan('Free');
-        }
-      } catch (err) {
-        console.error('Error checking subscription:', err);
+      if (error) throw error;
+
+      if (data) {
+        setCurrentPlan('Premium');
+      } else {
+        setCurrentPlan('Free');
       }
-    };
+    } catch (err) {
+      console.error('Error checking subscription:', err);
+    }
+  };
 
+  useEffect(() => {
     checkSubscription();
-  }, []);
+
+    // Xử lý redirect từ PayOS
+    const paymentStatus = searchParams?.get('payment');
+    if (paymentStatus === 'success') {
+      toast({
+        title: '✅ Thanh toán thành công!',
+        description: 'Đang kiểm tra trạng thái subscription...',
+      });
+      // Refresh subscription sau 2s
+      setTimeout(() => {
+        checkSubscription();
+      }, 2000);
+    } else if (paymentStatus === 'cancelled') {
+      toast({
+        title: 'Thanh toán bị hủy',
+        description: 'Bạn đã hủy thanh toán',
+        variant: 'destructive',
+      });
+    }
+  }, [searchParams]);
+
+  // 💳 Xử lý thanh toán qua PayOS
+  const handlePayOSPayment = async (planName: string, amount: number) => {
+    try {
+      setIsProcessing(true);
+
+      // Lấy thông tin user
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = user?.userId;
+      const userEmail = user?.email || '';
+      const userName = user?.name || user?.username || '';
+
+      if (!userId) {
+        toast({
+          title: 'Lỗi',
+          description: 'Vui lòng đăng nhập để tiếp tục',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // ⏳ Tạo payment
+      toast({
+        title: 'Đang tạo thanh toán...',
+        description: 'Vui lòng đợi trong giây lát',
+      });
+
+      const paymentResult = await createPayment({
+        userId,
+        planName,
+        amount,
+        userEmail,
+        userName,
+      });
+
+      if (!paymentResult) {
+        throw new Error('Không thể tạo thanh toán');
+      }
+
+      setShowPaymentDialog(false);
+
+      // 🚀 Mở popup thanh toán
+      toast({
+        title: 'Chuyển hướng thanh toán',
+        description: 'Vui lòng hoàn tất thanh toán trong cửa sổ mới',
+      });
+
+      openPaymentPopup(paymentResult.checkoutUrl);
+
+      // 🔄 Polling kiểm tra trạng thái
+      const isPaid = await pollPaymentStatus(paymentResult.orderCode);
+
+      if (isPaid) {
+        toast({
+          title: '✅ Thanh toán thành công!',
+          description: 'Bạn đã nâng cấp lên Premium',
+        });
+
+        // Refresh subscription status
+        await checkSubscription();
+      } else {
+        toast({
+          title: 'Chưa nhận được xác nhận',
+          description: 'Vui lòng kiểm tra lại sau vài phút hoặc liên hệ hỗ trợ',
+          variant: 'destructive',
+        });
+      }
+
+    } catch (err: any) {
+      console.error('❌ Payment error:', err);
+      toast({
+        title: 'Lỗi thanh toán',
+        description: err.message || 'Đã có lỗi xảy ra, vui lòng thử lại',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
 
   return (
@@ -135,48 +236,28 @@ export default function PricingPage() {
                     )}
                   </div> */}
                   <div className="pt-4">
-                    {isCurrent ? ( // 🟢 CHANGED: so sánh currentPlan động
+                    {isCurrent ? (
                       <Button variant="outline" className="w-full" disabled>
                         Current Plan
                       </Button>
-                    ) : (plan.name !== 'Free' && (
-                      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-                        <DialogTrigger asChild>
-                          <Button className="w-full">Upgrade to {plan.name}</Button>
-                        </DialogTrigger>
-
-                        <DialogContent className="max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>Payment Information</DialogTitle>
-                            <DialogDescription>
-                              Pay via MoMo and upload your receipt for verification.
-                            </DialogDescription>
-                          </DialogHeader>
-
-                          <div className="space-y-4">
-                            {/* QR Momo */}
-                            <div className="text-center space-y-3">
-                              <p className="font-medium">Scan QR code to pay via MoMo</p>
-
-                              <div className="mx-auto w-48 h-48 rounded-lg overflow-hidden border">
-                                <img
-                                  src="/momo-qr.jpg" // đường dẫn ảnh QR của bạn (ví dụ lưu trong /public)
-                                  alt="MoMo QR Code"
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-
-                              <p className="text-sm text-muted-foreground">Amount: {plan.price} VND</p>
-                            </div>
-
-                            {/* Gọi component upload */}
-                            <UploadReceipt
-                              onSuccess={() => console.log('Upload thành công!')}
-                              onClose={() => setShowPaymentDialog(false)}
-                            />
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                    ) : (plan.name !== 'Free' && plan.price && (
+                      <Button
+                        className="w-full"
+                        onClick={() => handlePayOSPayment(plan.name, parseInt(plan.price!.replace(/\./g, '')))}
+                        disabled={isLoading || isProcessing}
+                      >
+                        {isLoading || isProcessing ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Đang xử lý...
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            Thanh toán qua PayOS
+                          </>
+                        )}
+                      </Button>
                     )
                     )}
                   </div>
@@ -227,5 +308,19 @@ export default function PricingPage() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </DashboardLayout>
+    }>
+      <PricingContent />
+    </Suspense>
   );
 }

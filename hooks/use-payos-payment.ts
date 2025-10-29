@@ -91,13 +91,19 @@ export function usePayOSPayment() {
     };
 
     /**
-     * Polling kiểm tra trạng thái thanh toán
+     * Polling kiểm tra trạng thái thanh toán từ PayOS
      */
     const pollPaymentStatus = async (orderCode: number): Promise<boolean> => {
         return new Promise((resolve) => {
+            let attempts = 0;
+            const maxAttempts = 100; // 100 * 3s = 5 phút
+
             const interval = setInterval(async () => {
                 try {
-                    // Kiểm tra subscription trong DB
+                    attempts++;
+                    console.log(`🔄 Checking payment status (${attempts}/${maxAttempts})...`);
+
+                    // Lấy userId
                     const user = JSON.parse(localStorage.getItem('user') || '{}');
                     const userId = user?.userId;
 
@@ -107,30 +113,40 @@ export function usePayOSPayment() {
                         return;
                     }
 
-                    const { supabase } = await import('@/lib/supabaseClient');
-                    const { data, error } = await supabase
-                        .from('subscriptions')
-                        .select('*')
-                        .eq('userid', userId)
-                        .eq('ordercode', orderCode)
-                        .maybeSingle();
+                    // Gọi API check-payment
+                    const response = await fetch('/api/check-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderCode, userId }),
+                    });
 
-                    if (error) throw error;
+                    const result = await response.json();
 
-                    if (data && data.status === 'active') {
+                    if (result.success && result.status === 'PAID') {
+                        console.log('✅ Payment confirmed!');
                         clearInterval(interval);
                         resolve(true);
+                        return;
                     }
+
+                    if (result.status === 'CANCELLED') {
+                        console.log('❌ Payment cancelled');
+                        clearInterval(interval);
+                        resolve(false);
+                        return;
+                    }
+
+                    // Timeout sau maxAttempts
+                    if (attempts >= maxAttempts) {
+                        console.log('⏱️ Polling timeout');
+                        clearInterval(interval);
+                        resolve(false);
+                    }
+
                 } catch (err) {
                     console.error('❌ Polling error:', err);
                 }
             }, 3000); // Check mỗi 3 giây
-
-            // Timeout sau 5 phút
-            setTimeout(() => {
-                clearInterval(interval);
-                resolve(false);
-            }, 5 * 60 * 1000);
         });
     };
 

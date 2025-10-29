@@ -5,14 +5,15 @@ import { Inter, Manrope } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import GoogleProvider from './GoogleProvider';
+import { Toaster } from '@/components/ui/toaster';
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
 });
 
-const manrope = Manrope({ 
+const manrope = Manrope({
   subsets: ['latin'],
   variable: '--font-manrope',
   display: 'swap',
@@ -43,6 +44,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
+            <Toaster />
           </ThemeProvider>
         </GoogleProvider>
       </body>

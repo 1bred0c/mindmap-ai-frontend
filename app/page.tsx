@@ -6,35 +6,38 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Brain, Sparkles, Users, Zap } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageToggle } from '@/components/language-toggle';
 import { Logo } from '@/components/logo';
 import { useTheme } from 'next-themes';
-
-const features = [
-  {
-    icon: Brain,
-    title: 'Intelligent Mind Mapping',
-    description: 'Create beautiful, organized mind maps with our intuitive drag-and-drop editor.',
-  },
-  {
-    icon: Sparkles,
-    title: 'AI-Powered Suggestions',
-    description: 'Get smart suggestions and auto-generate mind maps from your ideas.',
-  },
-  {
-    icon: Users,
-    title: 'Team Collaboration',
-    description: 'Share and collaborate on mind maps with your team in real-time.',
-  },
-  {
-    icon: Zap,
-    title: 'Lightning Fast',
-    description: 'Optimized for speed and performance, even with complex mind maps.',
-  },
-];
+import { useLanguage } from '@/contexts/language-context';
 
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { setTheme } = useTheme();
+  const { t } = useLanguage();
+
+  const features = [
+    {
+      icon: Brain,
+      title: t('home.features.intelligent.title'),
+      description: t('home.features.intelligent.description'),
+    },
+    {
+      icon: Sparkles,
+      title: t('home.features.aiPowered.title'),
+      description: t('home.features.aiPowered.description'),
+    },
+    {
+      icon: Users,
+      title: t('home.features.teamCollaboration.title'),
+      description: t('home.features.teamCollaboration.description'),
+    },
+    {
+      icon: Zap,
+      title: t('home.features.lightningFast.title'),
+      description: t('home.features.lightningFast.description'),
+    },
+  ];
   // ✅ Kiểm tra token trong localStorage
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -55,15 +58,17 @@ export default function HomePage() {
       <nav className="relative z-10 flex items-center justify-between p-6 max-w-7xl mx-auto backdrop-blur-sm">
         <Logo size="md" />
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-3">
+          <LanguageToggle />
+          
           {/* Khi chưa đăng nhập */}
           {!isLoggedIn && (
             <>
-              <Button variant="ghost" asChild>
-                <Link href="/auth/login">Login</Link>
+              <Button variant="ghost" asChild className="hidden sm:flex">
+                <Link href="/auth/login">{t('nav.login')}</Link>
               </Button>
               <Button asChild>
-                <Link href="/auth/signup">Get Started</Link>
+                <Link href="/auth/signup">{t('nav.getStarted')}</Link>
               </Button>
             </>
           )}
@@ -71,7 +76,7 @@ export default function HomePage() {
           {/* Khi đã đăng nhập */}
           {isLoggedIn && (
             <Button asChild>
-              <Link href="/dashboard">Dashboard</Link>
+              <Link href="/dashboard">{t('nav.dashboard')}</Link>
             </Button>
           )}
         </div>
@@ -82,22 +87,22 @@ export default function HomePage() {
         <div className="text-center space-y-8">
           <div className="inline-block mb-4">
             <span className="px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-sm font-medium backdrop-blur-sm">
-              ✨ AI-Powered Mind Mapping
+              ✨ {t('home.tagline')}
             </span>
           </div>
 
           <h1 className="text-6xl md:text-7xl font-bold font-display tracking-tight">
-            Organize Your Ideas in a
+            {t('home.title')}
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-cyan-400 to-emerald-400 animate-shimmer">
-              Neural Universe
+              {t('home.titleHighlight')}
             </span>
           </h1>
 
           <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
-            Transform your thoughts into beautiful, interconnected mind maps.
+            {t('home.description')}
             <br />
-            Experience the <span className="text-cyan-400 font-semibold">power of connected intelligence</span>.
+            Experience the <span className="text-cyan-400 font-semibold">{t('home.descriptionHighlight')}</span>.
           </p>
 
           {/* CTA Buttons */}
@@ -106,11 +111,11 @@ export default function HomePage() {
               <Button size="lg" asChild className="group">
                 <Link href="/auth/signup">
                   <Sparkles className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
-                  Start Free Trial
+                  {t('home.startFreeTrial')}
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href="/auth/login">Sign In</Link>
+                <Link href="/auth/login">{t('nav.signIn')}</Link>
               </Button>
             </div>
           ) : (
@@ -118,7 +123,7 @@ export default function HomePage() {
               <Button size="lg" asChild>
                 <Link href="/dashboard">
                   <Brain className="mr-2 h-5 w-5" />
-                  Go to Dashboard
+                  {t('home.goToDashboard')}
                 </Link>
               </Button>
             </div>
@@ -158,10 +163,10 @@ export default function HomePage() {
 
             <CardHeader className="relative z-10">
               <CardTitle className="text-3xl font-display mb-2">
-                Ready to Enter the Neural Universe?
+                {t('home.cta.title')}
               </CardTitle>
               <CardDescription className="text-lg text-gray-400">
-                Join thousands of visionaries organizing ideas in a cosmic space of infinite connections.
+                {t('home.cta.description')}
               </CardDescription>
             </CardHeader>
             <CardContent className="relative z-10">
@@ -169,14 +174,14 @@ export default function HomePage() {
                 <Button size="lg" className="w-full sm:w-auto group" asChild>
                   <Link href="/auth/signup">
                     <Brain className="mr-2 h-5 w-5 group-hover:animate-pulse" />
-                    Create Your First Mind Map
+                    {t('home.cta.button')}
                   </Link>
                 </Button>
               ) : (
                 <Button size="lg" className="w-full sm:w-auto" asChild>
                   <Link href="/dashboard">
                     <Zap className="mr-2 h-5 w-5" />
-                    Go to Dashboard
+                    {t('home.goToDashboard')}
                   </Link>
                 </Button>
               )}

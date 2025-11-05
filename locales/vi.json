@@ -1,0 +1,211 @@
+{
+  "nav": {
+    "login": "Đăng nhập",
+    "getStarted": "Bắt đầu",
+    "dashboard": "Bảng điều khiển",
+    "signIn": "Đăng nhập"
+  },
+  "home": {
+    "tagline": "Sơ đồ tư duy được hỗ trợ bởi AI",
+    "title": "Sắp xếp ý tưởng của bạn trong",
+    "titleHighlight": "Vũ trụ Tư duy",
+    "description": "Biến đổi suy nghĩ của bạn thành các sơ đồ tư duy đẹp mắt, được kết nối với nhau.",
+    "descriptionHighlight": "sức mạnh của trí tuệ kết nối",
+    "startFreeTrial": "Dùng thử miễn phí",
+    "goToDashboard": "Vào bảng điều khiển",
+    "features": {
+      "intelligent": {
+        "title": "Sơ đồ tư duy thông minh",
+        "description": "Tạo sơ đồ tư duy đẹp mắt, có tổ chức với trình chỉnh sửa kéo thả trực quan của chúng tôi."
+      },
+      "aiPowered": {
+        "title": "Gợi ý được hỗ trợ bởi AI",
+        "description": "Nhận gợi ý thông minh và tự động tạo sơ đồ tư duy từ ý tưởng của bạn."
+      },
+      "teamCollaboration": {
+        "title": "Cộng tác nhóm",
+        "description": "Chia sẻ và cộng tác trên sơ đồ tư duy với nhóm của bạn trong thời gian thực."
+      },
+      "lightningFast": {
+        "title": "Nhanh như chớp",
+        "description": "Được tối ưu hóa về tốc độ và hiệu suất, ngay cả với các sơ đồ tư duy phức tạp."
+      }
+    },
+    "cta": {
+      "title": "Sẵn sàng bước vào Vũ trụ Tư duy?",
+      "description": "Tham gia cùng hàng nghìn nhà tư tưởng đang sắp xếp ý tưởng trong không gian vũ trụ với vô số kết nối.",
+      "button": "Tạo sơ đồ tư duy đầu tiên"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Chào mừng trở lại",
+      "description": "Đăng nhập để truy cập vũ trụ tư duy của bạn",
+      "email": "Email",
+      "emailPlaceholder": "Nhập email của bạn",
+      "password": "Mật khẩu",
+      "passwordPlaceholder": "Nhập mật khẩu của bạn",
+      "forgotPassword": "Quên mật khẩu?",
+      "signIn": "Đăng nhập",
+      "signingIn": "Đang đăng nhập...",
+      "noAccount": "Chưa có tài khoản?",
+      "signUp": "Đăng ký"
+    },
+    "signup": {
+      "title": "Tạo tài khoản",
+      "description": "Tham gia vũ trụ tư duy - xác minh email để bắt đầu",
+      "fullName": "Họ và tên",
+      "email": "Email",
+      "password": "Mật khẩu",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "createAccount": "Tạo tài khoản",
+      "sendingOtp": "Đang gửi OTP...",
+      "haveAccount": "Đã có tài khoản?",
+      "signIn": "Đăng nhập",
+      "otpTitle": "Xác minh Email",
+      "otpDescription": "Nhập mã 6 chữ số đã gửi đến",
+      "otpPlaceholder": "Nhập mã OTP",
+      "verifyOtp": "Xác minh OTP",
+      "verifying": "Đang xác minh...",
+      "resendOtp": "Gửi lại OTP",
+      "resendIn": "Gửi lại OTP sau"
+    }
+  },
+  "dashboard": {
+    "title": "Bảng điều khiển",
+    "welcome": "Chào mừng trở lại! Điều hướng mạng lưới tư duy của bạn.",
+    "newWorkspace": "Không gian làm việc mới",
+    "stats": {
+      "totalWorkspaces": "Tổng không gian làm việc",
+      "totalMindMaps": "Tổng sơ đồ tư duy",
+      "collaborators": "Cộng tác viên",
+      "views": "Lượt xem"
+    },
+    "recentWorkspaces": {
+      "title": "Không gian làm việc gần đây",
+      "description": "Các mạng lưới tư duy được cập nhật gần đây nhất của bạn",
+      "noWorkspaces": "Không tìm thấy không gian làm việc nào.",
+      "view": "Xem →",
+      "viewAll": "Xem tất cả không gian làm việc"
+    },
+    "quickActions": {
+      "title": "Hành động nhanh",
+      "description": "Khởi chạy chế độ sáng tạo",
+      "createWorkspace": "Tạo không gian làm việc mới",
+      "generateAI": "Tạo sơ đồ tư duy AI",
+      "createMindMap": "Tạo sơ đồ tư duy",
+      "upgradePremium": "Nâng cấp lên Premium"
+    }
+  },
+  "mindmap": {
+    "editor": {
+      "backToMindmaps": "Quay lại sơ đồ tư duy",
+      "addNode": "Thêm nút",
+      "save": "Lưu",
+      "loading": "Đang tải sơ đồ tư duy...",
+      "editNode": "Chỉnh sửa nút",
+      "label": "Nhãn",
+      "color": "Màu sắc",
+      "delete": "Xóa",
+      "update": "Cập nhật",
+      "newNode": "Nút mới",
+      "toast": {
+        "nodeAdded": "✅ Đã thêm nút",
+        "nodeUpdated": "💾 Đã cập nhật nút",
+        "nodeDeleted": "🗑️ Đã xóa nút",
+        "edgeCreated": "🔗 Đã tạo liên kết",
+        "edgeDeleted": "🗑️ Đã xóa liên kết",
+        "edgeLabelUpdated": "✅ Đã cập nhật nhãn liên kết",
+        "mindmapSaved": "💾 Đã lưu sơ đồ tư duy thành công!",
+        "selectedEdge": "Đã chọn liên kết:",
+        "noEdgeSelected": "Chưa chọn liên kết nào",
+        "errorCreatingNode": "Lỗi khi tạo nút",
+        "errorUpdatingNode": "❌ Không thể cập nhật nút",
+        "errorDeletingNode": "Lỗi khi xóa nút",
+        "errorCreatingEdge": "Lỗi khi tạo liên kết",
+        "errorDeletingEdge": "Lỗi khi xóa liên kết",
+        "errorUpdatingEdgeLabel": "Không thể cập nhật nhãn liên kết",
+        "errorSavingPositions": "❌ Không thể lưu vị trí",
+        "errorLoadingMindmap": "Không thể tải sơ đồ tư duy"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Bảng giá",
+    "description": "Chọn gói hoàn hảo cho nhu cầu sơ đồ tư duy của bạn. Nâng cấp bất kỳ lúc nào để mở khóa thêm tính năng.",
+    "plans": {
+      "free": {
+        "name": "Miễn phí",
+        "description": "Hoàn hảo để bắt đầu"
+      },
+      "premium": {
+        "name": "Premium",
+        "description": "Mọi thứ bạn cần cho công việc chuyên nghiệp",
+        "popular": "Phổ biến nhất"
+      }
+    },
+    "currentPlan": "Gói hiện tại",
+    "payViaPayOS": "Thanh toán qua PayOS",
+    "backToPlans": "Quay lại",
+    "waitingPayment": "Đang chờ thanh toán...",
+    "paymentViaPayOS": "Thanh toán qua PayOS",
+    "paymentDescription": "Vui lòng hoàn tất thanh toán trong cửa sổ bên dưới. Hệ thống sẽ tự động cập nhật khi thanh toán thành công.",
+    "paymentInstructions": {
+      "title": "Hướng dẫn:",
+      "step1": "Chọn phương thức thanh toán (QR, MoMo, ZaloPay...)",
+      "step2": "Quét mã QR hoặc nhập thông tin thanh toán",
+      "step3": "Sau khi thanh toán xong, hệ thống sẽ tự động xác nhận (không cần đóng cửa sổ)"
+    },
+    "paymentSuccess": {
+      "title": "🎉 Thanh toán thành công!",
+      "description": "Bạn đã nâng cấp lên gói Premium thành công!",
+      "activated": "✓ Gói Premium đã được kích hoạt",
+      "canUse": "Bạn có thể sử dụng tất cả tính năng Premium ngay bây giờ!",
+      "backToMain": "Quay lại trang chính"
+    },
+    "paymentFailed": {
+      "title": "Thanh toán không thành công",
+      "description": "Thanh toán đã bị hủy hoặc thất bại",
+      "incomplete": "Thanh toán chưa hoàn tất",
+      "contactSupport": "Nếu bạn đã thanh toán, vui lòng đợi vài phút hoặc liên hệ hỗ trợ.",
+      "tryAgain": "Thử lại",
+      "back": "Quay lại"
+    },
+    "faq": {
+      "title": "Câu hỏi thường gặp",
+      "q1": {
+        "question": "Quy trình thanh toán hoạt động như thế nào?",
+        "answer": "Nhấn nút 'Thanh toán qua PayOS', hoàn tất thanh toán trong cửa sổ PayOS nhúng, và gói Premium của bạn sẽ được kích hoạt tự động."
+      },
+      "q2": {
+        "question": "Tôi có thể hủy đăng ký bất kỳ lúc nào không?",
+        "answer": "Có, bạn có thể hủy đăng ký bất kỳ lúc nào. Các tính năng premium của bạn sẽ vẫn hoạt động cho đến khi kết thúc chu kỳ thanh toán hiện tại."
+      },
+      "q3": {
+        "question": "Điều gì xảy ra với dữ liệu của tôi nếu tôi hạ cấp?",
+        "answer": "Dữ liệu của bạn luôn an toàn. Nếu bạn vượt quá giới hạn của gói mới, bạn sẽ cần xóa một số nội dung hoặc nâng cấp lại để truy cập mọi thứ."
+      }
+    }
+  },
+  "common": {
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "success": "Thành công",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "save": "Lưu",
+    "delete": "Xóa",
+    "edit": "Chỉnh sửa",
+    "create": "Tạo",
+    "update": "Cập nhật",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "previous": "Trước",
+    "search": "Tìm kiếm",
+    "filter": "Lọc",
+    "sort": "Sắp xếp",
+    "view": "Xem",
+    "close": "Đóng",
+    "logout": "Đăng xuất"
+  }
+}

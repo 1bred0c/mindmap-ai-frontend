@@ -2,12 +2,14 @@
 
 import { Sidebar } from '@/components/sidebar';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageToggle } from '@/components/language-toggle';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogoIcon } from '@/components/logo';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { LogOut } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,6 +17,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [userData, setUserData] = useState<any>(null);
+  const { t } = useLanguage();
 
   // ✅ Lấy thông tin user từ localStorage
   useEffect(() => {
@@ -58,8 +61,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
             </Link>
 
-            {/* ✅ Bên phải: ThemeToggle + Logout */}
-            <div className="flex items-center space-x-3">
+            {/* ✅ Bên phải: LanguageToggle + ThemeToggle + Logout */}
+            <div className="flex items-center gap-2">
+              <LanguageToggle />
               <ThemeToggle />
               <Button
                 variant="destructive"
@@ -68,7 +72,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 className="flex items-center gap-2"
               >
                 <LogOut className="h-4 w-4" />
-                Logout
+                <span className="hidden sm:inline">{t('common.logout') || 'Logout'}</span>
               </Button>
             </div>
           </div>

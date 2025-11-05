@@ -3,6 +3,7 @@ import './cosmic-effects.css';
 import type { Metadata } from 'next';
 import { Inter, Manrope } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
+import { LanguageProvider } from '@/contexts/language-context';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import GoogleProvider from './GoogleProvider';
 import { Toaster } from '@/components/ui/toaster';
@@ -37,15 +38,17 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className="dark">
       <body className={`${inter.variable} ${manrope.variable} font-sans antialiased custom-scrollbar`}>
         <GoogleProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem={false}
-            disableTransitionOnChange
-          >
-            {children}
-            <Toaster />
-          </ThemeProvider>
+          <LanguageProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem={false}
+              disableTransitionOnChange
+            >
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </LanguageProvider>
         </GoogleProvider>
       </body>
     </html>

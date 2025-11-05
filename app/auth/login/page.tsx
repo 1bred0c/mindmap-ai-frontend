@@ -10,11 +10,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Eye, EyeOff } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageToggle } from '@/components/language-toggle';
 import { GoogleLogin } from '@react-oauth/google';
 import { Logo } from '@/components/logo';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -94,6 +97,11 @@ export default function LoginPage() {
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse-glow"
         style={{ animationDelay: '2s' }} />
 
+      {/* Language Toggle - Fixed Top Right */}
+      <div className="fixed top-6 right-6 z-50">
+        <LanguageToggle />
+      </div>
+
       <div className="relative z-10 w-full max-w-md px-4 space-y-6">
         {/* Header with Logo */}
         <div className="flex items-center justify-center mb-4">
@@ -104,35 +112,35 @@ export default function LoginPage() {
           <CardHeader className="text-center space-y-3">
             <CardTitle className="text-3xl font-display">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
-                Welcome Back
+                {t('auth.login.title')}
               </span>
             </CardTitle>
             <CardDescription className="text-gray-400">
-              Sign in to access your neural universe
+              {t('auth.login.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth.login.email')}</Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  placeholder={t('auth.login.emailPlaceholder')}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth.login.password')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder={t('auth.login.passwordPlaceholder')}
                     required
                   />
                   <Button
@@ -155,11 +163,11 @@ export default function LoginPage() {
                   href="/auth/forgot-password"
                   className="text-sm text-primary hover:underline"
                 >
-                  Forgot password?
+                  {t('auth.login.forgotPassword')}
                 </Link>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Signing in...' : 'Sign in'}
+                {isLoading ? t('auth.login.signingIn') : t('auth.login.signIn')}
               </Button>
             </form>
 
@@ -177,9 +185,9 @@ export default function LoginPage() {
             </div>
 
             <p className="text-center text-sm text-gray-400">
-              Don&apos;t have an account?{' '}
+              {t('auth.login.noAccount')}{' '}
               <Link href="/auth/signup" className="text-cyan-400 hover:text-cyan-300 transition-colors">
-                Sign up
+                {t('auth.login.signUp')}
               </Link>
             </p>
           </CardContent>

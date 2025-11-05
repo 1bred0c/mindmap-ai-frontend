@@ -1,0 +1,211 @@
+{
+  "nav": {
+    "login": "Login",
+    "getStarted": "Get Started",
+    "dashboard": "Dashboard",
+    "signIn": "Sign In"
+  },
+  "home": {
+    "tagline": "AI-Powered Mind Mapping",
+    "title": "Organize Your Ideas in a",
+    "titleHighlight": "Neural Universe",
+    "description": "Transform your thoughts into beautiful, interconnected mind maps.",
+    "descriptionHighlight": "power of connected intelligence",
+    "startFreeTrial": "Start Free Trial",
+    "goToDashboard": "Go to Dashboard",
+    "features": {
+      "intelligent": {
+        "title": "Intelligent Mind Mapping",
+        "description": "Create beautiful, organized mind maps with our intuitive drag-and-drop editor."
+      },
+      "aiPowered": {
+        "title": "AI-Powered Suggestions",
+        "description": "Get smart suggestions and auto-generate mind maps from your ideas."
+      },
+      "teamCollaboration": {
+        "title": "Team Collaboration",
+        "description": "Share and collaborate on mind maps with your team in real-time."
+      },
+      "lightningFast": {
+        "title": "Lightning Fast",
+        "description": "Optimized for speed and performance, even with complex mind maps."
+      }
+    },
+    "cta": {
+      "title": "Ready to Enter the Neural Universe?",
+      "description": "Join thousands of visionaries organizing ideas in a cosmic space of infinite connections.",
+      "button": "Create Your First Mind Map"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "description": "Sign in to access your neural universe",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "forgotPassword": "Forgot password?",
+      "signIn": "Sign in",
+      "signingIn": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up"
+    },
+    "signup": {
+      "title": "Create Account",
+      "description": "Join the neural universe - verify your email to start",
+      "fullName": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "createAccount": "Create Account",
+      "sendingOtp": "Sending OTP...",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "otpTitle": "Email Verification",
+      "otpDescription": "Enter the 6-digit code sent to",
+      "otpPlaceholder": "Enter OTP",
+      "verifyOtp": "Verify OTP",
+      "verifying": "Verifying...",
+      "resendOtp": "Resend OTP",
+      "resendIn": "Resend OTP in"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back! Navigate your neural network of ideas.",
+    "newWorkspace": "New Workspace",
+    "stats": {
+      "totalWorkspaces": "Total Workspaces",
+      "totalMindMaps": "Total Mind Maps",
+      "collaborators": "Collaborators",
+      "views": "Views"
+    },
+    "recentWorkspaces": {
+      "title": "Recent Workspaces",
+      "description": "Your most recently updated neural networks",
+      "noWorkspaces": "No workspaces found.",
+      "view": "View →",
+      "viewAll": "View All Workspaces"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "description": "Launch into creation mode",
+      "createWorkspace": "Create New Workspace",
+      "generateAI": "Generate AI Mind Map",
+      "createMindMap": "Create Mind Map",
+      "upgradePremium": "Upgrade to Premium"
+    }
+  },
+  "mindmap": {
+    "editor": {
+      "backToMindmaps": "Back to Mindmaps",
+      "addNode": "Add Node",
+      "save": "Save",
+      "loading": "Loading mindmap...",
+      "editNode": "Edit Node",
+      "label": "Label",
+      "color": "Color",
+      "delete": "Delete",
+      "update": "Update",
+      "newNode": "New Node",
+      "toast": {
+        "nodeAdded": "Node added",
+        "nodeUpdated": "Node updated",
+        "nodeDeleted": "Node deleted",
+        "edgeCreated": "Edge created",
+        "edgeDeleted": "Edge deleted",
+        "edgeLabelUpdated": "Edge label updated",
+        "mindmapSaved": "Mindmap saved successfully!",
+        "selectedEdge": "Selected edge:",
+        "noEdgeSelected": "No edge selected",
+        "errorCreatingNode": "Error creating node",
+        "errorUpdatingNode": "Failed to update node",
+        "errorDeletingNode": "Error deleting node",
+        "errorCreatingEdge": "Error creating edge",
+        "errorDeletingEdge": "Error deleting edge",
+        "errorUpdatingEdgeLabel": "Failed to update edge label",
+        "errorSavingPositions": "Failed to save positions",
+        "errorLoadingMindmap": "Failed to load mindmap"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Pricing Plans",
+    "description": "Choose the perfect plan for your mind mapping needs. Upgrade anytime to unlock more features.",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "description": "Perfect for getting started"
+      },
+      "premium": {
+        "name": "Premium",
+        "description": "Everything you need for professional work",
+        "popular": "Most Popular"
+      }
+    },
+    "currentPlan": "Current Plan",
+    "payViaPayOS": "Pay via PayOS",
+    "backToPlans": "Back",
+    "waitingPayment": "Waiting for payment...",
+    "paymentViaPayOS": "Payment via PayOS",
+    "paymentDescription": "Please complete the payment in the window below. The system will automatically update when payment is successful.",
+    "paymentInstructions": {
+      "title": "Instructions:",
+      "step1": "Choose payment method (QR, MoMo, ZaloPay...)",
+      "step2": "Scan QR code or enter payment information",
+      "step3": "After payment is complete, the system will automatically confirm (no need to close the window)"
+    },
+    "paymentSuccess": {
+      "title": "Payment Successful!",
+      "description": "You have successfully upgraded to Premium!",
+      "activated": "Premium package has been activated",
+      "canUse": "You can use all Premium features right now!",
+      "backToMain": "Back to main page"
+    },
+    "paymentFailed": {
+      "title": "Payment Failed",
+      "description": "Payment was cancelled or failed",
+      "incomplete": "Payment not completed",
+      "contactSupport": "If you have paid, please wait a few minutes or contact support.",
+      "tryAgain": "Try again",
+      "back": "Back"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": {
+        "question": "How does the payment process work?",
+        "answer": "Click 'Pay via PayOS' button, complete payment in the embedded PayOS window, and your Premium subscription will be activated automatically."
+      },
+      "q2": {
+        "question": "Can I cancel my subscription anytime?",
+        "answer": "Yes, you can cancel your subscription at any time. Your premium features will remain active until the end of your current billing period."
+      },
+      "q3": {
+        "question": "What happens to my data if I downgrade?",
+        "answer": "Your data is always safe. If you exceed the limits of your new plan, you'll need to delete some content or upgrade again to access everything."
+      }
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "update": "Update",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "view": "View",
+    "close": "Close",
+    "logout": "Logout"
+  }
+}

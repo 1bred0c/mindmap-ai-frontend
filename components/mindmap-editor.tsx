@@ -32,6 +32,7 @@ import { supabase } from '@/lib/supabaseClient';
 import CustomNode, { NodeShape } from '@/components/custom-node';
 import { ShapeSelector } from '@/components/shape-selector';
 import { useUpdateNodeShape } from '@/hooks/use-update-node-shape';
+import { useLanguage } from '@/contexts/language-context';
 import '@xyflow/react/dist/style.css';
 import '../app/node-shapes.css';
 
@@ -69,6 +70,7 @@ export function MindMapEditor({
   const [labelPosition, setLabelPosition] = useState<{ x: number; y: number } | null>(null);
 
   const { updateNodeShape } = useUpdateNodeShape();
+  const { t } = useLanguage();
 
   // 🔹 Register custom node types
   const nodeTypes = useMemo(() => ({ customNode: CustomNode }), []);
@@ -101,7 +103,7 @@ export function MindMapEditor({
       .eq('edge_id', editingEdgeId);
 
     if (error) {
-      toast.error('Failed to update edge label');
+      toast.error(t('mindmap.editor.toast.errorUpdatingEdgeLabel'));
       return;
     }
 
@@ -112,17 +114,17 @@ export function MindMapEditor({
     );
 
     setEditingEdgeId(null);
-    toast.success('✅ Edge label updated');
-  }, [editingEdgeId, editingLabel, setEdges]);
+    toast.success(t('mindmap.editor.toast.edgeLabelUpdated'));
+  }, [editingEdgeId, editingLabel, setEdges, t]);
 
 
   const onEdgeClick = useCallback((_event: any, edge: Edge) => {
     setSelectedEdge(edge);
-    toast.message(`Selected edge: ${edge.id}`);
-  }, []);
+    toast.message(`${t('mindmap.editor.toast.selectedEdge')} ${edge.id}`);
+  }, [t]);
   const handleDeleteEdge = useCallback(async () => {
     if (!selectedEdge) {
-      toast.error('No edge selected');
+      toast.error(t('mindmap.editor.toast.noEdgeSelected'));
       return;
     }
 
@@ -132,13 +134,13 @@ export function MindMapEditor({
     // 🔄 Xóa trong DB → realtime sync cho người khác
     const { error } = await supabase.from('edges').delete().eq('edge_id', selectedEdge.id);
     if (error) {
-      toast.error('Error deleting edge');
+      toast.error(t('mindmap.editor.toast.errorDeletingEdge'));
       return;
     }
 
-    toast.success('🗑️ Edge deleted');
+    toast.success(t('mindmap.editor.toast.edgeDeleted'));
     setSelectedEdge(null);
-  }, [selectedEdge, setEdges]);
+  }, [selectedEdge, setEdges, t]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -189,7 +191,7 @@ export function MindMapEditor({
         );
       } catch (error) {
         console.error(error);
-        toast.error('Failed to load mindmap');
+        toast.error(t('mindmap.editor.toast.errorLoadingMindmap'));
       } finally {
         setLoading(false);
       }
@@ -292,13 +294,13 @@ export function MindMapEditor({
     };
 
 
-  }, [mindMapId, setNodes, setEdges]);
+  }, [mindMapId, setNodes, setEdges, t]);
 
   // 🔹 Add new node
   const addNewNode = useCallback(async () => {
     const newNode = {
       mind_map_id: mindMapId,
-      content: 'New Node',
+      content: t('mindmap.editor.newNode'),
       position_x: Math.random() * 500 + 100,
       position_y: Math.random() * 300 + 100,
       color: '#3b82f6',
@@ -308,7 +310,7 @@ export function MindMapEditor({
     const { data, error } = await supabase.from('nodes').insert(newNode).select().single();
     if (error) {
       console.error(error);
-      toast.error('Error creating node');
+      toast.error(t('mindmap.editor.toast.errorCreatingNode'));
       return;
     }
 
@@ -326,8 +328,8 @@ export function MindMapEditor({
       },
     ]);
 
-    toast.success('✅ Node added');
-  }, [mindMapId, setNodes]);
+    toast.success(t('mindmap.editor.toast.nodeAdded'));
+  }, [mindMapId, setNodes, t]);
 
   // 🔹 Update node (label, color, shape)
   const updateNode = useCallback(async () => {
@@ -364,14 +366,14 @@ export function MindMapEditor({
       .eq('node_id', selectedNode.id);
 
     if (error) {
-      toast.error('❌ Failed to update node');
+      toast.error(t('mindmap.editor.toast.errorUpdatingNode'));
       console.error(error);
       return;
     }
 
-    toast.success('💾 Node updated');
+    toast.success(t('mindmap.editor.toast.nodeUpdated'));
     setIsEditDialogOpen(false);
-  }, [selectedNode, nodeText, nodeColor, nodeShape, setNodes]);
+  }, [selectedNode, nodeText, nodeColor, nodeShape, setNodes, t]);
 
 
 
@@ -395,13 +397,13 @@ export function MindMapEditor({
       .eq('node_id', selectedNode.id);
 
     if (error) {
-      toast.error('Error deleting node');
+      toast.error(t('mindmap.editor.toast.errorDeletingNode'));
       return;
     }
 
-    toast.success('🗑️ Node deleted');
+    toast.success(t('mindmap.editor.toast.nodeDeleted'));
     setIsEditDialogOpen(false);
-  }, [selectedNode, setNodes, setEdges]);
+  }, [selectedNode, setNodes, setEdges, t]);
 
 
 
@@ -417,7 +419,7 @@ export function MindMapEditor({
       const { data, error } = await supabase.from('edges').insert(newEdge).select().single();
       if (error) {
         console.error(error);
-        toast.error('Error creating edge');
+        toast.error(t('mindmap.editor.toast.errorCreatingEdge'));
         return;
       }
 
@@ -430,9 +432,9 @@ export function MindMapEditor({
           label: data.label || '',
         },
       ]);
-      toast.success('🔗 Edge created');
+      toast.success(t('mindmap.editor.toast.edgeCreated'));
     },
-    [mindMapId, setEdges]
+    [mindMapId, setEdges, t]
   );
 
   // 🔹 Delete edge (right-click)
@@ -441,13 +443,13 @@ export function MindMapEditor({
       event.preventDefault();
       const { error } = await supabase.from('edges').delete().eq('edge_id', edge.id);
       if (error) {
-        toast.error('Error deleting edge');
+        toast.error(t('mindmap.editor.toast.errorDeletingEdge'));
         return;
       }
       setEdges((eds) => eds.filter((e) => e.id !== edge.id));
-      toast.success('🗑️ Edge deleted');
+      toast.success(t('mindmap.editor.toast.edgeDeleted'));
     },
-    [setEdges]
+    [setEdges, t]
   );
 
   // 🔹 Save node positions
@@ -467,12 +469,12 @@ export function MindMapEditor({
       );
 
       await Promise.all(updates);
-      toast.success('💾 Mindmap saved successfully!');
+      toast.success(t('mindmap.editor.toast.mindmapSaved'));
     } catch (err) {
       console.error(err);
-      toast.error('❌ Failed to save positions');
+      toast.error(t('mindmap.editor.toast.errorSavingPositions'));
     }
-  }, [nodes]);
+  }, [nodes, t]);
 
 
   // 🔹 Click to edit node
@@ -486,7 +488,7 @@ export function MindMapEditor({
     setIsEditDialogOpen(true);
   }, []);
 
-  if (loading) return <div className="p-6 text-center">Loading mindmap...</div>;
+  if (loading) return <div className="p-6 text-center">{t('mindmap.editor.loading')}</div>;
 
   return (
     <div className="h-full flex flex-col">
@@ -502,7 +504,7 @@ export function MindMapEditor({
               className="gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Mindmaps
+              {t('mindmap.editor.backToMindmaps')}
             </Button>
           </div>
         )}
@@ -514,10 +516,10 @@ export function MindMapEditor({
           {!viewOnly && (
             <>
               <Button variant="outline" size="sm" onClick={addNewNode}>
-                <Plus className="h-4 w-4 mr-2" /> Add Node
+                <Plus className="h-4 w-4 mr-2" /> {t('mindmap.editor.addNode')}
               </Button>
               <Button variant="outline" size="sm" onClick={handleSave}>
-                <Save className="h-4 w-4 mr-2" /> Save
+                <Save className="h-4 w-4 mr-2" /> {t('mindmap.editor.save')}
               </Button>
             </>
           )}
@@ -597,11 +599,11 @@ export function MindMapEditor({
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit Node</DialogTitle>
+              <DialogTitle>{t('mindmap.editor.editNode')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-2">
               <div>
-                <Label>Label</Label>
+                <Label>{t('mindmap.editor.label')}</Label>
                 <Input
                   value={nodeText}
                   onChange={(e) => setNodeText(e.target.value)}
@@ -614,7 +616,7 @@ export function MindMapEditor({
               />
               
               <div>
-                <Label>Color</Label>
+                <Label>{t('mindmap.editor.color')}</Label>
                 <div className="flex gap-2 mt-1">
                   {nodeColors.map((color) => (
                     <button
@@ -630,9 +632,9 @@ export function MindMapEditor({
             </div>
             <DialogFooter>
               <Button variant="destructive" onClick={deleteNode}>
-                <Trash2 className="h-4 w-4 mr-1" /> Delete
+                <Trash2 className="h-4 w-4 mr-1" /> {t('mindmap.editor.delete')}
               </Button>
-              <Button onClick={updateNode}>Update</Button>
+              <Button onClick={updateNode}>{t('mindmap.editor.update')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

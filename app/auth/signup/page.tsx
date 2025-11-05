@@ -11,9 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { send } from 'emailjs-com';
 import { Eye, EyeOff, TimerReset } from 'lucide-react';
 import { Logo } from '@/components/logo';
+import { LanguageToggle } from '@/components/language-toggle';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function SignupPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [otp, setOtp] = useState('');
   const [generatedOtp, setGeneratedOtp] = useState('');
@@ -169,6 +172,11 @@ export default function SignupPage() {
       <div className="absolute bottom-20 left-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse-glow" 
            style={{ animationDelay: '1.5s' }} />
       
+      {/* Language Toggle - Fixed Top Right */}
+      <div className="fixed top-6 right-6 z-50">
+        <LanguageToggle />
+      </div>
+      
       {/* Logo at top */}
       <div className="absolute top-8 left-1/2 -translate-x-1/2 z-20">
         <Logo size="md" />
@@ -260,23 +268,23 @@ export default function SignupPage() {
       <Dialog open={showOtpDialog} onOpenChange={setShowOtpDialog}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Email Verification</DialogTitle>
+            <DialogTitle>{t('auth.signup.otpTitle')}</DialogTitle>
           </DialogHeader>
 
           <p className="text-sm text-muted-foreground mb-3">
-            Enter the 6-digit code sent to <strong>{formData.email}</strong>.
+            {t('auth.signup.otpDescription')} <strong>{formData.email}</strong>.
           </p>
 
           <Input
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
-            placeholder="Enter OTP"
+            placeholder={t('auth.signup.otpPlaceholder')}
             maxLength={6}
             className="text-center tracking-widest text-lg"
           />
 
           <Button onClick={handleVerifyOtp} className="w-full mt-3" disabled={isVerifying}>
-            {isVerifying ? 'Verifying...' : 'Verify OTP'}
+            {isVerifying ? t('auth.signup.verifying') : t('auth.signup.verifyOtp')}
           </Button>
 
           {/* Resend section */}
@@ -284,11 +292,11 @@ export default function SignupPage() {
             {isCounting ? (
               <p className="flex items-center gap-1">
                 <TimerReset className="h-4 w-4" />
-                Resend OTP in {countdown}s
+                {t('auth.signup.resendIn')} {countdown}s
               </p>
             ) : (
               <Button variant="link" onClick={handleResendOtp} className="text-primary">
-                Resend OTP
+                {t('auth.signup.resendOtp')}
               </Button>
             )}
           </div>

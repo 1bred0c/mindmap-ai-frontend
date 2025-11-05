@@ -14,16 +14,19 @@ import {
 } from '@/components/ui/select';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Bell, Mail, Shield, Palette, Globe } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function SettingsPage() {
+  const { t } = useLanguage()
+  
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold">Settings</h1>
+          <h1 className="text-3xl font-bold">{t('settings.title')}</h1>
           <p className="text-muted-foreground">
-            Customize your experience and manage your preferences.
+            {t('settings.description')}
           </p>
         </div>
 
@@ -33,28 +36,28 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Palette className="h-5 w-5" />
-                <span>Appearance</span>
+                <span>{t('settings.appearance.title')}</span>
               </CardTitle>
               <CardDescription>
-                Customize the look and feel of your workspace.
+                {t('settings.appearance.description')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Theme</Label>
+                  <Label>{t('settings.appearance.theme')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Choose your preferred theme
+                    {t('settings.appearance.themeDescription')}
                   </p>
                 </div>
                 <ThemeToggle />
               </div>
               
               <div className="space-y-2">
-                <Label>Language</Label>
+                <Label>{t('settings.appearance.language')}</Label>
                 <Select defaultValue="en">
                   <SelectTrigger>
-                    <SelectValue placeholder="Select language" />
+                    <SelectValue placeholder={t('settings.appearance.selectLanguage')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="en">English</SelectItem>
@@ -72,18 +75,18 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Bell className="h-5 w-5" />
-                <span>Notifications</span>
+                <span>{t('settings.notifications.title')}</span>
               </CardTitle>
               <CardDescription>
-                Manage how you receive notifications and updates.
+                {t('settings.notifications.description')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Email notifications</Label>
+                  <Label>{t('settings.notifications.email')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Receive updates via email
+                    {t('settings.notifications.emailDescription')}
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -91,9 +94,9 @@ export default function SettingsPage() {
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Push notifications</Label>
+                  <Label>{t('settings.notifications.push')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Receive push notifications in browser
+                    {t('settings.notifications.pushDescription')}
                   </p>
                 </div>
                 <Switch />
@@ -101,9 +104,9 @@ export default function SettingsPage() {
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Marketing emails</Label>
+                  <Label>{t('settings.notifications.marketing')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Receive updates about new features
+                    {t('settings.notifications.marketingDescription')}
                   </p>
                 </div>
                 <Switch />
@@ -116,18 +119,18 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Shield className="h-5 w-5" />
-                <span>Privacy & Security</span>
+                <span>{t('settings.privacy.title')}</span>
               </CardTitle>
               <CardDescription>
-                Manage your privacy and security settings.
+                {t('settings.privacy.description')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Make profile public</Label>
+                  <Label>{t('settings.privacy.publicProfile')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Allow others to find your profile
+                    {t('settings.privacy.publicProfileDescription')}
                   </p>
                 </div>
                 <Switch />
@@ -135,25 +138,25 @@ export default function SettingsPage() {
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Two-factor authentication</Label>
+                  <Label>{t('settings.privacy.twoFactor')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Add an extra layer of security
+                    {t('settings.privacy.twoFactorDescription')}
                   </p>
                 </div>
                 <Button variant="outline" size="sm">
-                  Enable
+                  {t('settings.privacy.enable')}
                 </Button>
               </div>
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Data export</Label>
+                  <Label>{t('settings.privacy.dataExport')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Download your data
+                    {t('settings.privacy.dataExportDescription')}
                   </p>
                 </div>
                 <Button variant="outline" size="sm">
-                  Export
+                  {t('settings.privacy.export')}
                 </Button>
               </div>
             </CardContent>
@@ -164,32 +167,32 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Globe className="h-5 w-5" />
-                <span>Workspace</span>
+                <span>{t('settings.workspace.title')}</span>
               </CardTitle>
               <CardDescription>
-                Configure your workspace preferences.
+                {t('settings.workspace.description')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label>Default view</Label>
+                <Label>{t('settings.workspace.defaultView')}</Label>
                 <Select defaultValue="grid">
                   <SelectTrigger>
-                    <SelectValue placeholder="Select default view" />
+                    <SelectValue placeholder={t('settings.workspace.selectDefaultView')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="grid">Grid view</SelectItem>
-                    <SelectItem value="list">List view</SelectItem>
-                    <SelectItem value="kanban">Kanban view</SelectItem>
+                    <SelectItem value="grid">{t('settings.workspace.gridView')}</SelectItem>
+                    <SelectItem value="list">{t('settings.workspace.listView')}</SelectItem>
+                    <SelectItem value="kanban">{t('settings.workspace.kanbanView')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Auto-save</Label>
+                  <Label>{t('settings.workspace.autoSave')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Automatically save changes
+                    {t('settings.workspace.autoSaveDescription')}
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -197,9 +200,9 @@ export default function SettingsPage() {
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Collaboration features</Label>
+                  <Label>{t('settings.workspace.collaboration')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Enable real-time collaboration
+                    {t('settings.workspace.collaborationDescription')}
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -211,7 +214,7 @@ export default function SettingsPage() {
         {/* Save Button */}
         <div className="flex justify-end">
           <Button>
-            Save All Changes
+            {t('settings.saveAll')}
           </Button>
         </div>
       </div>

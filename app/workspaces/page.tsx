@@ -28,6 +28,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
+import { useLanguage } from '@/contexts/language-context';
 
 // -----------------------------
 // 🔹 Type definition
@@ -61,6 +62,7 @@ function formatSafeDate(dateStr: string | null): string {
 // -----------------------------
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:8080/api/v1';
 export default function WorkspacesPage() {
+  const { t } = useLanguage()
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -107,20 +109,20 @@ export default function WorkspacesPage() {
         setWorkspaces(combined);
       } catch (error) {
         console.error(error);
-        toast.error('Cannot load your workspaces');
+        toast.error(t('workspaces.cannotLoad'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [t]);
 
 
 
   // 🔹 Handle delete workspace
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this workspace?')) return;
+    if (!confirm(t('workspaces.deleteConfirm'))) return;
 
     const userData = localStorage.getItem('user');
     const parsedUser = userData ? JSON.parse(userData) : null;
@@ -137,11 +139,11 @@ export default function WorkspacesPage() {
         }
       );
       if (!res.ok) throw new Error('Failed to delete workspace');
-      toast.success('Workspace deleted successfully!');
+      toast.success(t('workspaces.deleteSuccess'));
       setWorkspaces((prev) => prev.filter((w) => w.workspaceId !== id));
     } catch (error) {
       console.error(error);
-      toast.error('Error deleting workspace');
+      toast.error(t('workspaces.deleteError'));
     }
   };
 
@@ -150,7 +152,7 @@ export default function WorkspacesPage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="p-6 text-center">Loading workspaces...</div>
+        <div className="p-6 text-center">{t('workspaces.loading')}</div>
       </DashboardLayout>
     );
   }
@@ -164,15 +166,15 @@ export default function WorkspacesPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Workspaces</h1>
+            <h1 className="text-3xl font-bold">{t('workspaces.title')}</h1>
             <p className="text-muted-foreground">
-              Organize your mind maps into workspaces for better collaboration.
+              {t('workspaces.description')}
             </p>
           </div>
           <Button asChild>
             <Link href="/workspaces/new">
               <Plus className="h-4 w-4 mr-2" />
-              New Workspace
+              {t('workspaces.newWorkspace')}
             </Link>
           </Button>
         </div>
@@ -209,14 +211,14 @@ export default function WorkspacesPage() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem asChild>
                                 <Link href={`/workspaces/${workspace.workspaceId}/edit`}>
-                                  Edit Workspace
+                                  {t('workspaces.editWorkspace')}
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="text-destructive cursor-pointer"
                                 onClick={() => handleDelete(workspace.workspaceId)}
                               >
-                                Delete Workspace
+                                {t('workspaces.deleteWorkspace')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -226,7 +228,7 @@ export default function WorkspacesPage() {
                   </div>
                   <CardTitle className="text-xl">{workspace.name}</CardTitle>
                   <CardDescription>
-                    {workspace.description || 'No description'}
+                    {workspace.description || t('workspaces.noDescription')}
                   </CardDescription>
                 </CardHeader>
 
@@ -234,15 +236,15 @@ export default function WorkspacesPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
 
-                      <Badge variant="secondary">Active</Badge>
+                      <Badge variant="secondary">{t('workspaces.active')}</Badge>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
-                      <span>Created {formatSafeDate(workspace.createdAt)}</span>
+                      <span>{t('workspaces.created')} {formatSafeDate(workspace.createdAt)}</span>
                     </div>
                     <Button className="w-full" asChild>
                       <Link href={`/workspaces/${workspace.workspaceId}`}>
-                        Open Workspace
+                        {t('workspaces.openWorkspace')}
                       </Link>
                     </Button>
                   </div>
@@ -255,14 +257,14 @@ export default function WorkspacesPage() {
           <Card className="text-center py-12">
             <CardContent>
               <Folder className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <CardTitle className="mb-2">No workspaces yet</CardTitle>
+              <CardTitle className="mb-2">{t('workspaces.noWorkspaces')}</CardTitle>
               <CardDescription className="mb-6">
-                Create your first workspace to start organizing your mind maps.
+                {t('workspaces.noWorkspacesDescription')}
               </CardDescription>
               <Button asChild>
                 <Link href="/workspaces/new">
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Workspace
+                  {t('workspaces.createWorkspace')}
                 </Link>
               </Button>
             </CardContent>

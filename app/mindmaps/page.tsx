@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/language-context';
 
 // ✅ Type định nghĩa đúng theo API trả về
 type Mindmap = {
@@ -35,6 +36,7 @@ const API_ENDPOINT =
   process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:8080/api/v1';
 
 export default function MindmapsPage() {
+  const { t } = useLanguage()
   const [mindmaps, setMindmaps] = useState<Mindmap[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -59,14 +61,14 @@ export default function MindmapsPage() {
         setMindmaps(data);
       } catch (error) {
         console.error(error);
-        toast.error('Cannot load mind maps');
+        toast.error(t('mindmaps.cannotLoad'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchMindmaps();
-  }, []);
+  }, [t]);
 
   // 🔹 Lọc theo từ khóa
   const filteredMindmaps = mindmaps.filter((m) =>
@@ -110,17 +112,17 @@ export default function MindmapsPage() {
           <div>
             <h1 className="text-4xl font-bold font-display mb-2">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
-                Mind Maps
+                {t('mindmaps.title')}
               </span>
             </h1>
             <p className="text-gray-400">
-              Navigate your neural network of interconnected ideas
+              {t('mindmaps.description')}
             </p>
           </div>
           <Button asChild className="group mt-4 sm:mt-0">
             <Link href="/mindmaps/new">
               <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
-              New Mind Map
+              {t('mindmaps.newMindMap')}
             </Link>
           </Button>
         </div>
@@ -129,7 +131,7 @@ export default function MindmapsPage() {
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Search mind maps..."
+            placeholder={t('mindmaps.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -155,20 +157,20 @@ export default function MindmapsPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
                         <Link href={`/mindmaps/${mindmap.mindMapId}/edit`}>
-                          Edit Mind Map
+                          {t('mindmaps.editMindMap')}
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                      <DropdownMenuItem>Export</DropdownMenuItem>
+                      <DropdownMenuItem>{t('mindmaps.duplicate')}</DropdownMenuItem>
+                      <DropdownMenuItem>{t('mindmaps.export')}</DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive">
-                        Delete Mind Map
+                        {t('mindmaps.deleteMindMap')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
                 <CardTitle className="text-lg">{mindmap.title}</CardTitle>
                 <CardDescription>
-                  Last modified{' '}
+                  {t('mindmaps.lastModified')}{' '}
                   {formatDistanceToNow(new Date(mindmap.updatedAt), {
                     addSuffix: true,
                   })}
@@ -179,13 +181,13 @@ export default function MindmapsPage() {
                   <div className="flex items-center space-x-2">
                     <Folder className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">
-                      Workspace {mindmap.title}
+                      {t('mindmaps.workspace')} {mindmap.title}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                     <span>
-                      Created{' '}
+                      {t('workspaces.created')}{' '}
                       {formatDistanceToNow(new Date(mindmap.createdAt), {
                         addSuffix: true,
                       })}
@@ -195,7 +197,7 @@ export default function MindmapsPage() {
                     <Link
                       href={`/mindmaps/${mindmap.mindMapId}?userId=${userId}`}
                     >
-                      Open Mind Map
+                      {t('mindmaps.openMindMap')}
                     </Link>
                   </Button>
                 </div>
@@ -210,18 +212,18 @@ export default function MindmapsPage() {
             <CardContent>
               <Brain className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <CardTitle className="mb-2">
-                {searchQuery ? 'No mind maps found' : 'No mind maps yet'}
+                {searchQuery ? t('mindmaps.noResults') : t('mindmaps.noMindMaps')}
               </CardTitle>
               <CardDescription className="mb-6">
                 {searchQuery
-                  ? 'Try adjusting your search terms.'
-                  : 'Create your first mind map to get started.'}
+                  ? t('mindmaps.adjustSearch')
+                  : t('mindmaps.noMindMapsDescription')}
               </CardDescription>
               {!searchQuery && (
                 <Button asChild>
                   <Link href="/mindmaps/new">
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Mind Map
+                    {t('mindmaps.createMindMap')}
                   </Link>
                 </Button>
               )}

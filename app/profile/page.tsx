@@ -9,8 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera, Save, User, Calendar } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function ProfilePage() {
+  const { t } = useLanguage()
   const [userData, setUserData] = useState<any>(null);
   const [formData, setFormData] = useState({ fullname: '', email: '' });
   const [isLoading, setIsLoading] = useState(true);
@@ -21,7 +23,7 @@ export default function ProfilePage() {
       try {
         const token = localStorage.getItem('token');
         if (!token) {
-          alert('Please log in first.');
+          alert(t('profile.loginFirst'));
           return;
         }
 
@@ -42,14 +44,14 @@ export default function ProfilePage() {
         setFormData({ fullname: data.fullName, email: data.email });
       } catch (err) {
         console.error(err);
-        alert('Failed to load profile');
+        alert(t('profile.loadError'));
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchUserProfile();
-  }, []);
+  }, [t]);
 
   // ✅ Cập nhật thông tin người dùng
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,10 +69,10 @@ export default function ProfilePage() {
       });
 
       if (!res.ok) throw new Error('Update failed');
-      alert('Profile updated successfully!');
+      alert(t('profile.updateSuccess'));
     } catch (err) {
       console.error(err);
-      alert('Failed to update profile');
+      alert(t('profile.updateError'));
     } finally {
       setIsLoading(false);
     }
@@ -80,15 +82,15 @@ export default function ProfilePage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  if (isLoading) return <p className="p-6">Loading profile...</p>;
+  if (isLoading) return <p className="p-6">{t('profile.loading')}</p>;
 
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Profile Settings</h1>
+          <h1 className="text-3xl font-bold">{t('profile.title')}</h1>
           <p className="text-muted-foreground">
-            Manage your account settings and preferences.
+            {t('profile.description')}
           </p>
         </div>
 
@@ -96,7 +98,7 @@ export default function ProfilePage() {
           {/* Profile Overview */}
           <Card className="lg:col-span-1">
             <CardHeader>
-              <CardTitle>Profile Overview</CardTitle>
+              <CardTitle>{t('profile.overview')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex flex-col items-center space-y-4">
@@ -125,14 +127,14 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Role</span>
+                    <span className="text-sm">{t('profile.role')}</span>
                   </div>
                   <Badge>{userData.role}</Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Joined</span>
+                    <span className="text-sm">{t('profile.joined')}</span>
                   </div>
                   <span className="text-sm text-muted-foreground">
                     {new Date(userData.createdAt).toLocaleDateString()}
@@ -145,26 +147,26 @@ export default function ProfilePage() {
           {/* Profile Form */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>Personal Information</CardTitle>
+              <CardTitle>{t('profile.personalInfo')}</CardTitle>
               <CardDescription>
-                Update your personal details and contact information.
+                {t('profile.personalInfoDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="fullname">Full Name</Label>
+                    <Label htmlFor="fullname">{t('profile.fullName')}</Label>
                     <Input
                       id="fullname"
                       name="fullname"
                       value={formData.fullname}
                       onChange={handleInputChange}
-                      placeholder="Enter your full name"
+                      placeholder={t('profile.fullNamePlaceholder')}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t('profile.email')}</Label>
                     <Input id="email" value={formData.email} disabled />
                   </div>
                 </div>
@@ -172,7 +174,7 @@ export default function ProfilePage() {
                 <div className="flex justify-end">
                   <Button type="submit" disabled={isLoading}>
                     <Save className="h-4 w-4 mr-2" />
-                    {isLoading ? 'Saving...' : 'Save Changes'}
+                    {isLoading ? t('profile.saving') : t('profile.saveChanges')}
                   </Button>
                 </div>
               </form>

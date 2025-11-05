@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Folder, Brain, Users, TrendingUp, Plus, Zap } from 'lucide-react'
 import Link from 'next/link'
+import { useLanguage } from '@/contexts/language-context'
 
 // ==== Types ====
 type Workspace = {
@@ -41,6 +42,7 @@ type WorkspaceMember = {
 
 // ==== Component ====
 export default function DashboardPage() {
+  const { t } = useLanguage()
   const [userId, setUserId] = useState<number | null>(null)
   const [workspaces, setWorkspaces] = useState<Workspace[]>([])
   const [mindmaps, setMindmaps] = useState<Mindmap[]>([])
@@ -130,22 +132,22 @@ export default function DashboardPage() {
   // ==== Derived statistics ====
   const stats = [
     {
-      title: 'Total Workspaces',
+      title: t('dashboard.stats.totalWorkspaces'),
       value: loading ? '...' : workspaces.length.toString(),
       icon: Folder,
     },
     {
-      title: 'Total Mind Maps',
+      title: t('dashboard.stats.totalMindMaps'),
       value: loading ? '...' : mindmaps.length.toString(),
       icon: Brain,
     },
     {
-      title: 'Collaborators',
+      title: t('dashboard.stats.collaborators'),
       value: loading ? '...' : members.length.toString(),
       icon: Users,
     },
     {
-      title: 'Views',
+      title: t('dashboard.stats.views'),
       value: '—',
       icon: TrendingUp,
     },
@@ -164,17 +166,17 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-4xl font-bold font-display mb-2">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
-                Dashboard
+                {t('dashboard.title')}
               </span>
             </h1>
             <p className="text-gray-400">
-              Welcome back! Navigate your neural network of ideas.
+              {t('dashboard.welcome')}
             </p>
           </div>
           <Button asChild className="mt-4 sm:mt-0 group">
             <Link href="/workspaces/new">
               <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" /> 
-              New Workspace
+              {t('dashboard.newWorkspace')}
             </Link>
           </Button>
         </div>
@@ -210,9 +212,9 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="font-display flex items-center gap-2">
                 <Folder className="h-5 w-5 text-cyan-400" />
-                Recent Workspaces
+                {t('dashboard.recentWorkspaces.title')}
               </CardTitle>
-              <CardDescription>Your most recently updated neural networks</CardDescription>
+              <CardDescription>{t('dashboard.recentWorkspaces.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -220,7 +222,7 @@ export default function DashboardPage() {
                   <div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
                 </div>
               ) : recentWorkspaces.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No workspaces found.</p>
+                <p className="text-gray-500 text-center py-8">{t('dashboard.recentWorkspaces.noWorkspaces')}</p>
               ) : (
                 <div className="space-y-3">
                   {recentWorkspaces.map((ws) => (
@@ -241,7 +243,7 @@ export default function DashboardPage() {
                       </div>
                       <Button variant="ghost" size="sm" asChild>
                         <Link href={`/workspaces/${ws.workspace_id}`}>
-                          View →
+                          {t('dashboard.recentWorkspaces.view')}
                         </Link>
                       </Button>
                     </div>
@@ -250,7 +252,7 @@ export default function DashboardPage() {
               )}
               <div className="mt-6">
                 <Button variant="outline" className="w-full" asChild>
-                  <Link href="/workspaces">View All Workspaces</Link>
+                  <Link href="/workspaces">{t('dashboard.recentWorkspaces.viewAll')}</Link>
                 </Button>
               </div>
             </CardContent>
@@ -263,34 +265,34 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="font-display flex items-center gap-2">
                 <Zap className="h-5 w-5 text-purple-400" />
-                Quick Actions
+                {t('dashboard.quickActions.title')}
               </CardTitle>
-              <CardDescription>Launch into creation mode</CardDescription>
+              <CardDescription>{t('dashboard.quickActions.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <Button className="w-full justify-start group" asChild>
                   <Link href="/workspaces/new">
                     <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" /> 
-                    Create New Workspace
+                    {t('dashboard.quickActions.createWorkspace')}
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start group" asChild>
                   <Link href="/ai">
                     <Brain className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" /> 
-                    Generate AI Mind Map
+                    {t('dashboard.quickActions.generateAI')}
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start group" asChild>
                   <Link href="/mindmaps/new">
                     <Brain className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" /> 
-                    Create Mind Map
+                    {t('dashboard.quickActions.createMindMap')}
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start group" asChild>
                   <Link href="/pricing">
                     <TrendingUp className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" /> 
-                    Upgrade to Premium
+                    {t('dashboard.quickActions.upgradePremium')}
                   </Link>
                 </Button>
               </div>

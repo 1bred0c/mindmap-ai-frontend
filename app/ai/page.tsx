@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react';
 import { Sparkles, Brain, Lightbulb, TrendingUp, Users, Target, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import { useLanguage } from '@/contexts/language-context';
 
 // Types for API
 type LLMModel = 'GEMINI' | 'CHATGPT';
@@ -38,38 +39,8 @@ interface GenerateMindmapResponse {
   edges: GeneratedEdge[];
 }
 
-const aiSuggestions = [
-  {
-    id: '1',
-    title: 'Project Planning',
-    description: 'Create a comprehensive project plan with timelines and deliverables',
-    icon: Target,
-    category: 'Business',
-  },
-  {
-    id: '2',
-    title: 'Learning Path',
-    description: 'Design a structured learning curriculum for any topic',
-    icon: Lightbulb,
-    category: 'Education',
-  },
-  {
-    id: '3',
-    title: 'Marketing Strategy',
-    description: 'Develop a complete marketing campaign with channels and tactics',
-    icon: TrendingUp,
-    category: 'Marketing',
-  },
-  {
-    id: '4',
-    title: 'Team Structure',
-    description: 'Organize team roles and responsibilities effectively',
-    icon: Users,
-    category: 'Management',
-  },
-];
-
 export default function AIPage() {
+  const { t } = useLanguage()
   const [inputText, setInputText] = useState('');
   const [selectedModel, setSelectedModel] = useState<LLMModel>('GEMINI');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -79,6 +50,37 @@ export default function AIPage() {
   const router = useRouter();
   const [canGenerate, setCanGenerate] = useState(false); // 🟢 có thể bấm nút tạo hay không
   const [trialCount, setTrialCount] = useState(0);       // 🟢 số trial còn lại
+  
+  const aiSuggestions = [
+    {
+      id: '1',
+      title: t('ai.suggestions.projectPlanning.title'),
+      description: t('ai.suggestions.projectPlanning.description'),
+      icon: Target,
+      category: 'Business',
+    },
+    {
+      id: '2',
+      title: t('ai.suggestions.learningPath.title'),
+      description: t('ai.suggestions.learningPath.description'),
+      icon: Lightbulb,
+      category: 'Education',
+    },
+    {
+      id: '3',
+      title: t('ai.suggestions.marketingStrategy.title'),
+      description: t('ai.suggestions.marketingStrategy.description'),
+      icon: TrendingUp,
+      category: 'Marketing',
+    },
+    {
+      id: '4',
+      title: t('ai.suggestions.teamStructure.title'),
+      description: t('ai.suggestions.teamStructure.description'),
+      icon: Users,
+      category: 'Management',
+    },
+  ];
 
 
   useEffect(() => {
@@ -135,8 +137,8 @@ export default function AIPage() {
   const handleGenerate = async () => {
     if (!inputText.trim()) {
       toast({
-        title: "Lỗi",
-        description: "Vui lòng nhập nội dung mô tả mindmap",
+        title: t('ai.error'),
+        description: t('ai.errorDescription'),
         variant: "destructive",
       });
       return;
@@ -187,14 +189,14 @@ export default function AIPage() {
       setGeneratedData(data);
 
       toast({
-        title: "Thành công!",
-        description: "Đã tạo cấu trúc mindmap thành công",
+        title: t('ai.success'),
+        description: t('ai.successDescription'),
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Có lỗi xảy ra khi tạo mindmap';
       setError(errorMessage);
       toast({
-        title: "Lỗi",
+        title: t('ai.error'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -219,8 +221,8 @@ export default function AIPage() {
     }));
 
     toast({
-      title: "Đang chuyển hướng...",
-      description: "Chuyển đến trang tạo mindmap",
+      title: t('ai.redirecting'),
+      description: t('ai.redirectDescription'),
     });
 
     // Chuyển đến trang tạo mindmap mới với flag từ AI
@@ -241,27 +243,26 @@ export default function AIPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
             <Sparkles className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold">AI Mind Map Generator</h1>
+          <h1 className="text-3xl font-bold">{t('ai.title')}</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Biến ý tưởng của bạn thành mind map có cấu trúc ngay lập tức với AI.
-            Chỉ cần mô tả chủ đề hoặc sử dụng một trong các mẫu của chúng tôi.
+            {t('ai.description')}
           </p>
         </div>
 
         {/* Input Section */}
         <Card className="max-w-4xl mx-auto">
           <CardHeader>
-            <CardTitle>Mô tả chủ đề của bạn</CardTitle>
+            <CardTitle>{t('ai.inputTitle')}</CardTitle>
             <CardDescription>
-              Cho chúng tôi biết bạn muốn tạo mind map về điều gì. Càng chi tiết càng tốt để có kết quả tốt hơn.
+              {t('ai.inputDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Chọn AI Model</label>
+              <label className="text-sm font-medium">{t('ai.selectModel')}</label>
               <Select value={selectedModel} onValueChange={(value) => setSelectedModel(value as LLMModel)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Chọn AI Model" />
+                  <SelectValue placeholder={t('ai.selectModel')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="GEMINI">
@@ -281,7 +282,7 @@ export default function AIPage() {
             </div>
 
             <Textarea
-              placeholder="Ví dụ: Tạo mind map cho kế hoạch chiến dịch marketing cho một ứng dụng di động mới, bao gồm phân tích đối tượng mục tiêu, các kênh marketing, phân bổ ngân sách và các chỉ số thành công..."
+              placeholder={t('ai.placeholder')}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               rows={4}
@@ -290,7 +291,7 @@ export default function AIPage() {
             <div className="flex flex-col gap-2 justify-end items-end">
               <div className="flex justify-between items-center w-full">
                 <p className="text-sm text-muted-foreground">
-                  {inputText.length} ký tự
+                  {inputText.length} {t('ai.characters')}
                 </p>
                 <Button
                   onClick={handleGenerate}
@@ -300,12 +301,12 @@ export default function AIPage() {
                   {isGenerating ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Đang tạo... (có thể mất 5-15s)
+                      {t('ai.generating')}
                     </>
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4 mr-2" />
-                      Tạo Mind Map
+                      {t('ai.generate')}
                     </>
                   )}
                 </Button>
@@ -314,12 +315,12 @@ export default function AIPage() {
               {/* 🟢 ADD: Thông báo lượt dùng thử */}
               {!canGenerate && trialCount === 0 && (
                 <p className="text-sm text-destructive text-right">
-                  Bạn đã hết lượt dùng thử AI Mindmap.
+                  {t('ai.noTrialsLeft')}
                 </p>
               )}
               {trialCount > 0 && (
                 <p className="text-sm text-muted-foreground text-right">
-                  Lượt dùng thử còn lại: {trialCount}
+                  {t('ai.trialsRemaining')} {trialCount}
                 </p>
               )}
             </div>
@@ -334,9 +335,9 @@ export default function AIPage() {
               <div className="flex flex-col items-center justify-center space-y-4">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
                 <div className="text-center space-y-2">
-                  <h3 className="text-lg font-semibold">AI đang tạo mindmap...</h3>
+                  <h3 className="text-lg font-semibold">{t('ai.generatingTitle')}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Quá trình này có thể mất 5-15 giây. Vui lòng đợi.
+                    {t('ai.generatingDescription')}
                   </p>
                 </div>
               </div>
@@ -353,11 +354,11 @@ export default function AIPage() {
                   <AlertCircle className="h-6 w-6 text-destructive" />
                 </div>
                 <div className="text-center space-y-2">
-                  <h3 className="text-lg font-semibold">Có lỗi xảy ra</h3>
+                  <h3 className="text-lg font-semibold">{t('ai.errorTitle')}</h3>
                   <p className="text-sm text-muted-foreground">{error}</p>
                 </div>
                 <Button variant="outline" onClick={() => setError(null)}>
-                  Thử lại
+                  {t('ai.tryAgain')}
                 </Button>
               </div>
             </CardContent>
@@ -367,7 +368,7 @@ export default function AIPage() {
         {/* AI Suggestions */}
         {!generatedData && !isGenerating && (
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-xl font-semibold mb-4">Mẫu bắt đầu nhanh</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('ai.quickStart')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {aiSuggestions.map((suggestion) => (
                 <Card
@@ -410,13 +411,13 @@ export default function AIPage() {
                 <CardTitle>{generatedData.title}</CardTitle>
               </div>
               <CardDescription>
-                AI đã tạo cấu trúc mindmap sau đây. Bạn có thể tạo mindmap ngay hoặc chỉnh sửa nội dung để có kết quả khác.
+                {t('ai.resultDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Nodes Preview */}
               <div className="space-y-2">
-                <h4 className="font-semibold text-sm">Các Node ({generatedData.nodes.length})</h4>
+                <h4 className="font-semibold text-sm">{t('ai.nodes')} ({generatedData.nodes.length})</h4>
                 <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
                   {generatedData.nodes.map((node, index) => (
                     <div
@@ -453,7 +454,7 @@ export default function AIPage() {
               {/* Edges Preview */}
               {generatedData.edges.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="font-semibold text-sm">Các kết nối ({generatedData.edges.length})</h4>
+                  <h4 className="font-semibold text-sm">{t('ai.connections')} ({generatedData.edges.length})</h4>
                   <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
                     {generatedData.edges.map((edge, index) => (
                       <div
@@ -481,11 +482,11 @@ export default function AIPage() {
                   variant="outline"
                   onClick={handleRegenerateNew}
                 >
-                  Tạo mới
+                  {t('ai.createNew')}
                 </Button>
                 <Button onClick={createMindMap}>
                   <Brain className="h-4 w-4 mr-2" />
-                  Tạo Mind Map
+                  {t('ai.createMindMap')}
                 </Button>
               </div>
             </CardContent>

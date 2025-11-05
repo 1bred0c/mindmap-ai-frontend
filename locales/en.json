@@ -130,6 +130,53 @@
       }
     }
   },
+  "ai": {
+    "title": "AI Mind Map Generator",
+    "description": "Transform your ideas into structured mind maps instantly with AI. Just describe your topic or use one of our templates.",
+    "inputTitle": "Describe your topic",
+    "inputDescription": "Tell us what you want to create a mind map about. The more detailed, the better the results.",
+    "selectModel": "Select AI Model",
+    "placeholder": "Example: Create a mind map for a marketing campaign plan for a new mobile app, including target audience analysis, marketing channels, budget allocation, and success metrics...",
+    "characters": "characters",
+    "generate": "Generate Mind Map",
+    "generating": "Generating... (may take 5-15s)",
+    "generatingTitle": "AI is creating mind map...",
+    "generatingDescription": "This process may take 5-15 seconds. Please wait.",
+    "errorTitle": "An error occurred",
+    "tryAgain": "Try again",
+    "quickStart": "Quick start templates",
+    "nodes": "Nodes",
+    "connections": "Connections",
+    "resultDescription": "AI has created the following mind map structure. You can create the mind map now or edit the content for different results.",
+    "createNew": "Create new",
+    "createMindMap": "Create Mind Map",
+    "redirecting": "Redirecting...",
+    "redirectDescription": "Going to create mind map page",
+    "success": "Success!",
+    "successDescription": "Mind map structure created successfully",
+    "error": "Error",
+    "errorDescription": "Please enter mind map description",
+    "noTrialsLeft": "You have no AI Mind Map trials left.",
+    "trialsRemaining": "Trials remaining:",
+    "suggestions": {
+      "projectPlanning": {
+        "title": "Project Planning",
+        "description": "Create a comprehensive project plan with timelines and deliverables"
+      },
+      "learningPath": {
+        "title": "Learning Path",
+        "description": "Design a structured learning curriculum for any topic"
+      },
+      "marketingStrategy": {
+        "title": "Marketing Strategy",
+        "description": "Develop a complete marketing campaign with channels and tactics"
+      },
+      "teamStructure": {
+        "title": "Team Structure",
+        "description": "Organize team roles and responsibilities effectively"
+      }
+    }
+  },
   "pricing": {
     "title": "Pricing Plans",
     "description": "Choose the perfect plan for your mind mapping needs. Upgrade anytime to unlock more features.",

@@ -8,27 +8,13 @@ import { Star, CreditCard, Loader2, CheckCircle2, XCircle, ArrowLeft } from 'luc
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
-
-const plans = [
-  {
-    name: 'Free',
-    currency: 'VND 0',
-    description: 'Perfect for getting started',
-  },
-  {
-    name: 'Premium',
-    price: '59.000',
-    currency: 'VND ',
-    period: '/month',
-    description: 'Everything you need for professional work',
-    popular: true,
-  },
-];
+import { useLanguage } from '@/contexts/language-context';
 
 // 🎯 Payment State Type
 type PaymentState = 'idle' | 'processing' | 'success' | 'failed';
 
 export default function PricingPage() {
+  const { t } = useLanguage()
   const [currentPlan, setCurrentPlan] = useState<'Free' | 'Premium'>('Free');
   const [paymentState, setPaymentState] = useState<PaymentState>('idle');
   const [checkoutUrl, setCheckoutUrl] = useState<string>('');
@@ -36,6 +22,22 @@ export default function PricingPage() {
   const [currentUserId, setCurrentUserId] = useState<number>(0);
 
   const { toast } = useToast();
+  
+  const plans = [
+    {
+      name: t('pricing.plans.free.name'),
+      currency: 'VND 0',
+      description: t('pricing.plans.free.description'),
+    },
+    {
+      name: t('pricing.plans.premium.name'),
+      price: '59.000',
+      currency: 'VND ',
+      period: '/month',
+      description: t('pricing.plans.premium.description'),
+      popular: true,
+    },
+  ];
 
   // ✅ Bước 0: Kiểm tra subscription hiện tại
   const checkSubscription = async () => {
@@ -83,8 +85,8 @@ export default function PricingPage() {
 
       if (!userId) {
         toast({
-          title: 'Lỗi',
-          description: 'Vui lòng đăng nhập để tiếp tục',
+          title: t('ai.error'),
+          description: t('profile.loginFirst'),
           variant: 'destructive',
         });
         setPaymentState('idle');
@@ -205,7 +207,7 @@ export default function PricingPage() {
     }, intervalMs);
 
     return () => clearInterval(pollInterval);
-  }, [paymentState, orderCode, currentUserId]);
+  }, [paymentState, orderCode, currentUserId, toast]);
 
   // 🔙 Quay lại danh sách plans
   const handleBackToPlans = () => {
@@ -222,20 +224,19 @@ export default function PricingPage() {
           <div className="flex items-center justify-between">
             <Button variant="ghost" onClick={handleBackToPlans}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Quay lại
+              {t('pricing.backToPlans')}
             </Button>
             <div className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground">Đang chờ thanh toán...</span>
+              <span className="text-sm text-muted-foreground">{t('pricing.waitingPayment')}</span>
             </div>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Thanh toán qua PayOS</CardTitle>
+              <CardTitle>{t('pricing.paymentViaPayOS')}</CardTitle>
               <CardDescription>
-                Vui lòng hoàn tất thanh toán trong cửa sổ bên dưới.
-                Hệ thống sẽ tự động cập nhật khi thanh toán thành công.
+                {t('pricing.paymentDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -249,12 +250,12 @@ export default function PricingPage() {
               </div>
               <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <p className="text-sm text-blue-900 dark:text-blue-100">
-                  💡 <strong>Hướng dẫn:</strong>
+                  💡 <strong>{t('pricing.paymentInstructions.title')}</strong>
                 </p>
                 <ul className="text-xs text-blue-700 dark:text-blue-300 mt-2 space-y-1 ml-4 list-disc">
-                  <li>Chọn phương thức thanh toán (QR, MoMo, ZaloPay...)</li>
-                  <li>Quét mã QR hoặc nhập thông tin thanh toán</li>
-                  <li>Sau khi thanh toán xong, hệ thống sẽ tự động xác nhận (không cần đóng cửa sổ)</li>
+                  <li>{t('pricing.paymentInstructions.step1')}</li>
+                  <li>{t('pricing.paymentInstructions.step2')}</li>
+                  <li>{t('pricing.paymentInstructions.step3')}</li>
                 </ul>
               </div>
             </CardContent>
@@ -278,23 +279,23 @@ export default function PricingPage() {
                 </div>
               </div>
               <CardTitle className="text-2xl text-green-600 dark:text-green-400">
-                🎉 Thanh toán thành công!
+                {t('pricing.paymentSuccess.title')}
               </CardTitle>
               <CardDescription className="text-base">
-                Bạn đã nâng cấp lên gói Premium thành công!
+                {t('pricing.paymentSuccess.description')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4 space-y-2">
                 <p className="text-sm font-semibold text-green-900 dark:text-green-100">
-                  ✓ Gói Premium đã được kích hoạt
+                  {t('pricing.paymentSuccess.activated')}
                 </p>
                 <p className="text-xs text-green-700 dark:text-green-300">
-                  Bạn có thể sử dụng tất cả tính năng Premium ngay bây giờ!
+                  {t('pricing.paymentSuccess.canUse')}
                 </p>
               </div>
               <Button onClick={handleBackToPlans} className="w-full">
-                Quay lại trang chính
+                {t('pricing.paymentSuccess.backToMain')}
               </Button>
             </CardContent>
           </Card>
@@ -314,24 +315,24 @@ export default function PricingPage() {
                 <XCircle className="h-16 w-16 text-destructive" />
               </div>
               <CardTitle className="text-2xl text-destructive">
-                Thanh toán không thành công
+                {t('pricing.paymentFailed.title')}
               </CardTitle>
               <CardDescription className="text-base">
-                Thanh toán đã bị hủy hoặc thất bại
+                {t('pricing.paymentFailed.description')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 space-y-2">
                 <p className="text-sm font-semibold text-destructive">
-                  Thanh toán chưa hoàn tất
+                  {t('pricing.paymentFailed.incomplete')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Nếu bạn đã thanh toán, vui lòng đợi vài phút hoặc liên hệ hỗ trợ.
+                  {t('pricing.paymentFailed.contact')}
                 </p>
               </div>
               <div className="flex flex-col gap-3">
                 <Button onClick={handleBackToPlans} className="w-full">
-                  Thử lại
+                  {t('pricing.paymentFailed.tryAgain')}
                 </Button>
                 <Button onClick={handleBackToPlans} variant="outline" className="w-full">
                   Quay lại
@@ -388,7 +389,7 @@ export default function PricingPage() {
                   <div className="pt-4">
                     {isCurrent ? (
                       <Button variant="outline" className="w-full" disabled>
-                        Current Plan
+                        {t('pricing.currentPlan')}
                       </Button>
                     ) : (plan.name !== 'Free' && plan.price && (
                       <Button
@@ -396,7 +397,7 @@ export default function PricingPage() {
                         onClick={() => handleCreatePayment(plan.name, parseInt(plan.price!.replace(/\./g, '')))}
                       >
                         <CreditCard className="mr-2 h-4 w-4" />
-                        Thanh toán qua PayOS
+                        {t('pricing.payViaPayOS')}
                       </Button>
                     ))}
                   </div>
@@ -408,38 +409,35 @@ export default function PricingPage() {
 
         {/* FAQ Section */}
         <div className="max-w-2xl mx-auto text-center space-y-4">
-          <h2 className="text-2xl font-bold">Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-bold">{t('pricing.faq.title')}</h2>
           <div className="grid gap-4 text-left">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">How does the payment process work?</CardTitle>
+                <CardTitle className="text-lg">{t('pricing.faq.q1.question')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Click "Thanh toán qua PayOS" button, complete payment in the embedded PayOS window,
-                  and your Premium subscription will be activated automatically.
+                  {t('pricing.faq.q1.answer')}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Can I cancel my subscription anytime?</CardTitle>
+                <CardTitle className="text-lg">{t('pricing.faq.q2.question')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Yes, you can cancel your subscription at any time. Your premium features will
-                  remain active until the end of your current billing period.
+                  {t('pricing.faq.q2.answer')}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">What happens to my data if I downgrade?</CardTitle>
+                <CardTitle className="text-lg">{t('pricing.faq.q3.question')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Your data is always safe. If you exceed the limits of your new plan,
-                  you'll need to delete some content or upgrade again to access everything.
+                  {t('pricing.faq.q3.answer')}
                 </p>
               </CardContent>
             </Card>

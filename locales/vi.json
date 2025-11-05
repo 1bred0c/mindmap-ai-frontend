@@ -130,6 +130,53 @@
       }
     }
   },
+  "ai": {
+    "title": "Trình tạo Sơ đồ tư duy AI",
+    "description": "Biến ý tưởng của bạn thành sơ đồ tư duy có cấu trúc ngay lập tức với AI. Chỉ cần mô tả chủ đề hoặc sử dụng một trong các mẫu của chúng tôi.",
+    "inputTitle": "Mô tả chủ đề của bạn",
+    "inputDescription": "Cho chúng tôi biết bạn muốn tạo sơ đồ tư duy về điều gì. Càng chi tiết càng tốt để có kết quả tốt hơn.",
+    "selectModel": "Chọn AI Model",
+    "placeholder": "Ví dụ: Tạo sơ đồ tư duy cho kế hoạch chiến dịch marketing cho một ứng dụng di động mới, bao gồm phân tích đối tượng mục tiêu, các kênh marketing, phân bổ ngân sách và các chỉ số thành công...",
+    "characters": "ký tự",
+    "generate": "Tạo sơ đồ tư duy",
+    "generating": "Đang tạo... (có thể mất 5-15s)",
+    "generatingTitle": "AI đang tạo sơ đồ tư duy...",
+    "generatingDescription": "Quá trình này có thể mất 5-15 giây. Vui lòng đợi.",
+    "errorTitle": "Có lỗi xảy ra",
+    "tryAgain": "Thử lại",
+    "quickStart": "Mẫu bắt đầu nhanh",
+    "nodes": "Các Node",
+    "connections": "Các kết nối",
+    "resultDescription": "AI đã tạo cấu trúc sơ đồ tư duy sau đây. Bạn có thể tạo sơ đồ tư duy ngay hoặc chỉnh sửa nội dung để có kết quả khác.",
+    "createNew": "Tạo mới",
+    "createMindMap": "Tạo sơ đồ tư duy",
+    "redirecting": "Đang chuyển hướng...",
+    "redirectDescription": "Chuyển đến trang tạo sơ đồ tư duy",
+    "success": "Thành công!",
+    "successDescription": "Đã tạo cấu trúc sơ đồ tư duy thành công",
+    "error": "Lỗi",
+    "errorDescription": "Vui lòng nhập nội dung mô tả sơ đồ tư duy",
+    "noTrialsLeft": "Bạn đã hết lượt dùng thử AI Sơ đồ tư duy.",
+    "trialsRemaining": "Lượt dùng thử còn lại:",
+    "suggestions": {
+      "projectPlanning": {
+        "title": "Lập kế hoạch dự án",
+        "description": "Tạo kế hoạch dự án toàn diện với thời gian và các mốc quan trọng"
+      },
+      "learningPath": {
+        "title": "Lộ trình học tập",
+        "description": "Thiết kế chương trình học có cấu trúc cho bất kỳ chủ đề nào"
+      },
+      "marketingStrategy": {
+        "title": "Chiến lược Marketing",
+        "description": "Phát triển chiến dịch marketing hoàn chỉnh với các kênh và chiến thuật"
+      },
+      "teamStructure": {
+        "title": "Cơ cấu nhóm",
+        "description": "Tổ chức vai trò và trách nhiệm của nhóm một cách hiệu quả"
+      }
+    }
+  },
   "pricing": {
     "title": "Bảng giá",
     "description": "Chọn gói hoàn hảo cho nhu cầu sơ đồ tư duy của bạn. Nâng cấp bất kỳ lúc nào để mở khóa thêm tính năng.",

@@ -20,6 +20,7 @@ export default function PricingPage() {
   const [checkoutUrl, setCheckoutUrl] = useState<string>('');
   const [orderCode, setOrderCode] = useState<number>(0);
   const [currentUserId, setCurrentUserId] = useState<number>(0);
+  const [isCreatingPayment, setIsCreatingPayment] = useState<boolean>(false);
 
   const { toast } = useToast();
 
@@ -76,6 +77,7 @@ export default function PricingPage() {
   // 💳 Bước 1: Tạo payment link từ PayOS
   const handleCreatePayment = async (planName: string, amount: number) => {
     try {
+      setIsCreatingPayment(true);
       setPaymentState('processing');
 
       const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -90,6 +92,7 @@ export default function PricingPage() {
           variant: 'destructive',
         });
         setPaymentState('idle');
+        setIsCreatingPayment(false);
         return;
       }
 
@@ -120,6 +123,7 @@ export default function PricingPage() {
       setCheckoutUrl(result.checkoutUrl);
       setOrderCode(result.orderCode);
       setCurrentUserId(userId);
+      setIsCreatingPayment(false);
 
       // Hiển thị iframe PayOS (tiếp tục ở bước 2)
       toast({
@@ -135,6 +139,7 @@ export default function PricingPage() {
         variant: 'destructive',
       });
       setPaymentState('failed');
+      setIsCreatingPayment(false);
     }
   };
 
@@ -214,6 +219,7 @@ export default function PricingPage() {
     setPaymentState('idle');
     setCheckoutUrl('');
     setOrderCode(0);
+    setIsCreatingPayment(false);
   };
 
   // 🎨 Render: Màn hình thanh toán đang xử lý (iframe PayOS)
@@ -397,9 +403,19 @@ export default function PricingPage() {
                       <Button
                         className="w-full"
                         onClick={() => handleCreatePayment(plan.name, parseInt(plan.price!.replace(/\./g, '')))}
+                        disabled={isCreatingPayment}
                       >
-                        <CreditCard className="mr-2 h-4 w-4" />
-                        {t('pricing.payViaPayOS')}
+                        {isCreatingPayment ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Đang tạo thanh toán...
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            {t('pricing.payViaPayOS')}
+                          </>
+                        )}
                       </Button>
                     ))}
                   </div>

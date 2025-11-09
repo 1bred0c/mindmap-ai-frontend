@@ -22,7 +22,7 @@ export default function PricingPage() {
   const [currentUserId, setCurrentUserId] = useState<number>(0);
 
   const { toast } = useToast();
-  
+
   const plans = [
     {
       name: t('pricing.plans.free.name'),
@@ -31,11 +31,13 @@ export default function PricingPage() {
     },
     {
       name: t('pricing.plans.premium.name'),
-      price: '59.000',
+      price: '29.000',
+      originalPrice: '59.000',
       currency: 'VND ',
       period: '/month',
       description: t('pricing.plans.premium.description'),
       popular: true,
+      discount: '50%',
     },
   ];
 
@@ -375,9 +377,21 @@ export default function PricingPage() {
                     </Badge>
                   </div>
                 )}
+                {plan.discount && (
+                  <div className="absolute -top-3 right-4">
+                    <Badge className="bg-red-500 text-white">
+                      🔥 -{plan.discount}
+                    </Badge>
+                  </div>
+                )}
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
                   <div className="flex items-baseline justify-center space-x-1">
+                    {plan.originalPrice && (
+                      <span className="text-lg font-medium text-muted-foreground line-through mr-2">
+                        {plan.currency}{plan.originalPrice}
+                      </span>
+                    )}
                     <span className="text-4xl font-bold">
                       {plan.currency ? plan.currency : '$'}{plan.price}
                     </span>

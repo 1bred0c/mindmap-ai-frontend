@@ -72,6 +72,7 @@ export default function AdminPage() {
           enddate
         )
       `)
+      .order('createdat', { ascending: false })
 
     if (error) {
       console.error('Fetch users error:', error)
@@ -330,7 +331,7 @@ export default function AdminPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {new Date(u.createdat).toLocaleDateString()}
+                      {new Date(u.createdat).toLocaleDateString('en-GB')}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -434,7 +435,14 @@ export default function AdminPage() {
                         'No image'
                       )}
                     </TableCell>
-                    <TableCell>{p.paidat ? new Date(p.paidat).toLocaleString() : '-'}</TableCell>
+                    <TableCell>
+                      {p.paidat ? (
+                        <div className="text-sm">
+                          <div>{new Date(p.paidat).toLocaleDateString('en-GB')}</div>
+                          <div className="text-muted-foreground">{new Date(p.paidat).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</div>
+                        </div>
+                      ) : '-'}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={
                         p.status === 'pending' ? 'secondary' :
